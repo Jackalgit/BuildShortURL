@@ -1,0 +1,12 @@
+POST http://localhost:8080/
+Content-Type: text/plain
+
+www.ivan.ru
+
+###
+
+# @no-redirect
+GET http://localhost:8080/deedd07f-1710-4384-b773-3c63717b8c79
+Content-Type: text/plain
+
+###

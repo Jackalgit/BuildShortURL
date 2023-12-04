@@ -29,7 +29,7 @@ func (s *ShortUrl) MakeShortUrl(w http.ResponseWriter, r *http.Request) {
 		log.Println("Read originalURL ERROR: ", err)
 	}
 	if string(originalURL) == "" {
-		http.Error(w, "Body don't have url", http.StatusBadRequest)
+		http.Error(w, "Body don't url", http.StatusBadRequest)
 		return
 	}
 	shortUrlKey := uuid.New().String()
@@ -42,5 +42,24 @@ func (s *ShortUrl) MakeShortUrl(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *ShortUrl) GetUrl(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Only Get requests are allowed!", http.StatusMethodNotAllowed)
+		return
+	}
+	shortUrlKey := r.URL.Path[1:]
+	//fmt.Println(shortUrlKey)
+	if shortUrlKey == "" {
+		http.Error(w, "Don't shortUrlKey", http.StatusBadRequest)
+		return
+	}
 
+	originalURL, found := s.url[shortUrlKey]
+	fmt.Println(string(originalURL))
+	if !found {
+		http.Error(w, "originalURL not found", http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Location", string(originalURL))
+	w.WriteHeader(http.StatusTemporaryRedirect)
+	//http.Redirect(w, r, string(originalURL), http.StatusTemporaryRedirect)
 }
