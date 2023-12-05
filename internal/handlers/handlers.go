@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/google/uuid"
+	"github.com/Jackalgit/BuildShortURL/internal/util"
 	"io"
 	"log"
 	"net/http"
@@ -32,7 +32,8 @@ func (s *ShortUrl) MakeShortUrl(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Body don't url", http.StatusBadRequest)
 		return
 	}
-	shortUrlKey := uuid.New().String()
+
+	shortUrlKey := util.GenerateKey()
 	s.url[shortUrlKey] = originalURL
 
 	w.Header().Set("content-type", "text/plain")
