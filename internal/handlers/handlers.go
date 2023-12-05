@@ -8,18 +8,18 @@ import (
 	"net/http"
 )
 
-type ShortUrl struct {
+type ShortURL struct {
 	url map[string][]byte
 }
 
-func NewShortUrl() *ShortUrl {
-	return &ShortUrl{
+func NewShortURL() *ShortURL {
+	return &ShortURL{
 		url: make(map[string][]byte),
 	}
 
 }
 
-func (s *ShortUrl) MakeShortUrl(w http.ResponseWriter, r *http.Request) {
+func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
 		return
@@ -42,18 +42,18 @@ func (s *ShortUrl) MakeShortUrl(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (s *ShortUrl) GetUrl(w http.ResponseWriter, r *http.Request) {
+func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Only Get requests are allowed!", http.StatusMethodNotAllowed)
 		return
 	}
-	shortUrlKey := r.URL.Path[1:]
-	if shortUrlKey == "" {
+	shortURLKey := r.URL.Path[1:]
+	if shortURLKey == "" {
 		http.Error(w, "Don't shortUrlKey", http.StatusBadRequest)
 		return
 	}
 
-	originalURL, found := s.url[shortUrlKey]
+	originalURL, found := s.url[shortURLKey]
 	if !found {
 		http.Error(w, "originalURL not found", http.StatusNotFound)
 		return

@@ -5,8 +5,8 @@ import (
 )
 
 func GenerateKey() string {
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	const keyLength = 6
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	const keyLength = 10
 
 	shortKey := make([]byte, keyLength)
 	for i := range shortKey {
