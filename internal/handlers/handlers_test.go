@@ -64,6 +64,8 @@ func TestShortURL_GetURL(t *testing.T) {
 
 			require.Equal(t, tc.statusCode, w.Code, "The response code does not match what is expected")
 			assert.Equal(t, tc.Location, result.Header.Get("Location"))
+			err := result.Body.Close()
+			require.NoError(t, err)
 
 		})
 	}
