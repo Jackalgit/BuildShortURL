@@ -10,11 +10,11 @@ var Config struct {
 }
 
 func ConfigPort() {
-	flag.StringVar(&Config.Port, "a", ":8080", "Addres local port")
+	flag.StringVar(&Config.Port, "a", "localhost:8080", "Addres local port")
 
 }
 
 func ConfigBaseAddress() {
-	flag.StringVar(&Config.BaseAddress, "b", "http://localhost", "Base local addres")
+	flag.StringVar(&Config.BaseAddress, "b", "http://", "Base local addres")
 
 }

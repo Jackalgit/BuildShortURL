@@ -40,7 +40,8 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 	flag.Parse()
-	w.Write([]byte(fmt.Sprint(config.Config.BaseAddress, config.Config.Port, "/sffdewf", shortURLKey)))
+	fmt.Println(fmt.Sprint(config.Config.BaseAddress, config.Config.Port, "/", shortURLKey))
+	w.Write([]byte(fmt.Sprint(config.Config.BaseAddress, config.Config.Port, "/", shortURLKey)))
 
 }
 
