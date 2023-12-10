@@ -15,6 +15,6 @@ func ConfigPort() {
 }
 
 func ConfigBaseAddress() {
-	flag.StringVar(&Config.BaseAddress, "b", "http://", "Base local addres")
+	flag.StringVar(&Config.BaseAddress, "b", "http://localhost:8080", "Base local addres")
 
 }

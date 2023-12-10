@@ -41,7 +41,7 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	flag.Parse()
 	fmt.Println(fmt.Sprint(config.Config.BaseAddress, config.Config.Port, "/", shortURLKey))
-	w.Write([]byte(fmt.Sprint(config.Config.BaseAddress, config.Config.Port, "/", shortURLKey)))
+	w.Write([]byte(fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)))
 
 }
 
