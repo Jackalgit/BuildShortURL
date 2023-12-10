@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	"github.com/Jackalgit/BuildShortURL/internal/util"
 	"io"
 	"log"
@@ -38,7 +37,9 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 	s.url[shortURLKey] = originalURL
 	w.Header().Set("content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(fmt.Sprint(config.Config.BaseAddress, config.Config.Port, "/", shortURLKey)))
+	w.Write([]byte(fmt.Sprint("/", shortURLKey)))
+
+	//w.Write([]byte(fmt.Sprint(config.Config.BaseAddress, config.Config.Port, "/", shortURLKey)))
 
 }
 
