@@ -1,4 +1,4 @@
-POST http://localhost:8080/
+POST http://localhost:8090/
 Content-Type: text/plain
 
 www.ivan.ru
@@ -6,7 +6,8 @@ www.ivan.ru
 ###
 
 # @no-redirect
-GET http://localhost:8080/R6dtvH
+GET http://localhost:8090/EyicTVHwMG
+
 
 Content-Type: text/plain
 
