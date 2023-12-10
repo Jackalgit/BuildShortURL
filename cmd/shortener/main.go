@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/Jackalgit/BuildShortURL/internal/handlers"
 	"github.com/gorilla/mux"
 	"log"
@@ -17,6 +18,7 @@ func main() {
 func runServer() error {
 
 	dictURL := handlers.NewShortURL()
+	fmt.Println(dictURL)
 
 	router := mux.NewRouter()
 

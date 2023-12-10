@@ -35,7 +35,6 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 
 	shortURLKey := util.GenerateKey()
 	s.url[shortURLKey] = originalURL
-
 	w.Header().Set("content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(fmt.Sprintf("http://localhost:8080/%v", shortURLKey)))
