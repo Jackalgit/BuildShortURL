@@ -1,4 +1,4 @@
-package httpClient
+package httpclient
 
 import (
 	"bufio"
@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func HttpClient() {
+func HTTPClient() {
 	endpoint := "http://localhost:8080/"
 	// контейнер данных для запроса
 	data := url.Values{}
