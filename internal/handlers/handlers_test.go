@@ -1,13 +1,11 @@
 package handlers
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"regexp"
 	"strings"
 	"testing"
 )
@@ -91,7 +89,7 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 			Body:        "long long long url",
 			statusCode:  http.StatusCreated,
 			contentType: "text/plain",
-			shortURL:    "http://localhost:8080/",
+			shortURL:    "http://localhost",
 		},
 	}
 
@@ -121,10 +119,7 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 			err = result.Body.Close()
 			require.NoError(t, err)
 
-			patternRegURL := fmt.Sprintf("^%v", tc.shortURL)
-			matched, _ := regexp.MatchString(patternRegURL, string(bodyResult))
-
-			assert.True(t, matched)
+			assert.Equal(t, tc.Body, string(s.url[string(bodyResult)[1:]]))
 
 		})
 	}
