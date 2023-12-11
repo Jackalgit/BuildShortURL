@@ -34,7 +34,7 @@ import (
 //}
 
 func TestShortURL_GetURL(t *testing.T) {
-	s := ShortURL{url: map[string][]byte{"qweQWErtyQ": []byte("long long long long url")}}
+	s := ShortURL{url: map[string][]byte{"qweQWErtyQ": []byte("long long long url")}}
 
 	tests := []struct {
 		name       string
