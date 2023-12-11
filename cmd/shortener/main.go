@@ -10,7 +10,7 @@ import (
 )
 
 func init() {
-	config.ConfigPort()
+	config.ConfigServerPort()
 	config.ConfigBaseAddress()
 
 }
@@ -34,6 +34,6 @@ func runServer() error {
 
 	flag.Parse()
 
-	return http.ListenAndServe(config.Config.Port, router)
+	return http.ListenAndServe(config.Config.ServerPort, router)
 
 }
