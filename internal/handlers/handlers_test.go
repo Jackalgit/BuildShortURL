@@ -10,29 +10,6 @@ import (
 	"testing"
 )
 
-//func TestNewShortURL(t *testing.T) {
-//	tests := []struct {
-//		name string
-//		want *ShortURL
-//	}{
-//		{
-//			name: "NewShortURL test #1",
-//			want: &ShortURL{
-//				url: nil,
-//			},
-//		},
-//	}
-//	for _, tc := range tests {
-//		t.Run(tc.name, func(t *testing.T) {
-//			fmt.Println(tc.want)
-//			fmt.Println(NewShortURL())
-//			if got := NewShortURL(); !reflect.DeepEqual(got, tc.want) {
-//				t.Errorf("NewShortURL() = %v, want %v", got, tc.want)
-//			}
-//		})
-//	}
-//}
-
 func TestShortURL_GetURL(t *testing.T) {
 	s := ShortURL{url: map[string][]byte{"qweQWErtyQ": []byte("long long long url")}}
 
