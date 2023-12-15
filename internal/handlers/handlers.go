@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
-	"github.com/Jackalgit/BuildShortURL/internal/dicturl"
+	dicturl "github.com/Jackalgit/BuildShortURL/internal/dictURL"
 	"github.com/Jackalgit/BuildShortURL/internal/util"
 	"io"
 	"log"
