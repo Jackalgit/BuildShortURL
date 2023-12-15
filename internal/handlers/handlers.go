@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
-	"github.com/Jackalgit/BuildShortURL/internal/dictURL"
+	"github.com/Jackalgit/BuildShortURL/internal/dicturl"
 	"github.com/Jackalgit/BuildShortURL/internal/util"
 	"io"
 	"log"
@@ -12,12 +12,12 @@ import (
 )
 
 type ShortURL struct {
-	url dictURL.DictURL
+	url dicturl.DictURL
 }
 
 func NewShortURL() *ShortURL {
 	return &ShortURL{
-		url: make(dictURL.DictURL),
+		url: make(dicturl.DictURL),
 	}
 
 }
