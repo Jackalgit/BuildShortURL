@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
+	"github.com/Jackalgit/BuildShortURL/internal/dictURL"
 	"github.com/Jackalgit/BuildShortURL/internal/util"
 	"io"
 	"log"
@@ -11,17 +12,21 @@ import (
 )
 
 type ShortURL struct {
-	url map[string][]byte
+	url dictURL.DictURL
 }
 
 func NewShortURL() *ShortURL {
 	return &ShortURL{
-		url: make(map[string][]byte),
+		url: make(dictURL.DictURL),
 	}
 
 }
 
 func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
+	// Оставляю проверку метода т.к. во 2 инкременте мы тестируем работу функции, а не работу запущенного сервера.
+	// В роутаре указан метод запроса и сервер возвращает 405 ошибку, но при тесте функции отдельно работа сервера не проверяется.
+	// Или как вариан из тестов убрать проверку методов запроса.
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
 		return
@@ -35,8 +40,8 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortURLKey := util.GenerateKey()
-	s.url[shortURLKey] = originalURL
+	shortURLKey := s.AddOriginalURL(originalURL)
+
 	w.Header().Set("content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 	flag.Parse()
@@ -63,5 +68,13 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Location", string(originalURL))
 	w.WriteHeader(http.StatusTemporaryRedirect)
+
+}
+
+func (s *ShortURL) AddOriginalURL(originalURL []byte) string {
+	shortURLKey := util.GenerateKey()
+	s.url[shortURLKey] = originalURL
+
+	return shortURLKey
 
 }

@@ -17,6 +17,8 @@ func init() {
 
 func main() {
 
+	flag.Parse()
+
 	if err := runServer(); err != nil {
 		log.Println("runServer ERROR: ", err)
 	}
@@ -29,10 +31,8 @@ func runServer() error {
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/", dictURL.MakeShortURL)
-	router.HandleFunc("/{id}", dictURL.GetURL)
-
-	flag.Parse()
+	router.HandleFunc("/", dictURL.MakeShortURL).Methods("POST")
+	router.HandleFunc("/{id}", dictURL.GetURL).Methods("GET")
 
 	return http.ListenAndServe(config.Config.ServerPort, router)
 

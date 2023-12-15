@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -36,7 +37,9 @@ func TestShortURL_GetURL(t *testing.T) {
 			s.GetURL(w, r)
 
 			result := w.Result()
-
+			fmt.Println(tc.statusCode)
+			fmt.Println(w.Code)
+			fmt.Println(result)
 			require.Equal(t, tc.statusCode, w.Code, "The response code does not match what is expected")
 			assert.Equal(t, tc.Location, result.Header.Get("Location"))
 			err := result.Body.Close()
