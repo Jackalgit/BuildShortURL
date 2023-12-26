@@ -1,7 +1,6 @@
 package middelware
 
 import (
-	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	"github.com/Jackalgit/BuildShortURL/internal/logger"
 	"go.uber.org/zap"
 	"net/http"
@@ -50,8 +49,6 @@ func LoggingMiddleware(h http.Handler) http.Handler {
 		h.ServeHTTP(&lw, r) // внедряем реализацию http.ResponseWriter
 
 		duration := time.Since(start)
-
-		logger.Log.Info("Running server", zap.String("address", config.Config.ServerPort))
 
 		logger.Log.Info(
 			"",
