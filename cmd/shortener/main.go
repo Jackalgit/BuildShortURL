@@ -4,7 +4,10 @@ import (
 	"flag"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	"github.com/Jackalgit/BuildShortURL/internal/handlers"
+	"github.com/Jackalgit/BuildShortURL/internal/logger"
+	"github.com/Jackalgit/BuildShortURL/internal/middelware"
 	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 	"log"
 	"net/http"
 )
@@ -12,6 +15,7 @@ import (
 func init() {
 	config.ConfigServerPort()
 	config.ConfigBaseAddress()
+	config.ConfigLogger()
 
 }
 
@@ -27,12 +31,19 @@ func main() {
 
 func runServer() error {
 
+	if err := logger.Initialize(config.Config.LogLevel); err != nil {
+		return err
+	}
+
+	logger.Log.Info("Running server", zap.String("address", config.Config.ServerPort))
+
 	dictURL := handlers.NewShortURL()
 
 	router := mux.NewRouter()
 
 	router.HandleFunc("/", dictURL.MakeShortURL).Methods("POST")
 	router.HandleFunc("/{id}", dictURL.GetURL).Methods("GET")
+	router.Use(middelware.LoggingMiddleware)
 
 	return http.ListenAndServe(config.Config.ServerPort, router)
 

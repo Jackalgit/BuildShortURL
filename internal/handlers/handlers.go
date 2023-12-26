@@ -17,7 +17,7 @@ type ShortURL struct {
 
 func NewShortURL() *ShortURL {
 	return &ShortURL{
-		url: make(dicturl.DictURL),
+		url: dicturl.NewDictURL(),
 	}
 
 }
@@ -44,7 +44,7 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 	flag.Parse()
-	fmt.Println(fmt.Sprint(config.Config.BaseAddress, config.Config.ServerPort, "/", shortURLKey))
+	//fmt.Println(fmt.Sprint(config.Config.BaseAddress, config.Config.ServerPort, "/", shortURLKey))
 	w.Write([]byte(fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)))
 
 }
@@ -72,7 +72,7 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 
 func (s *ShortURL) AddOriginalURL(originalURL []byte) string {
 	shortURLKey := util.GenerateKey()
-	s.url[shortURLKey] = originalURL
+	s.url.AddURL(shortURLKey, originalURL)
 
 	return shortURLKey
 
