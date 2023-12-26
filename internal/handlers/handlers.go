@@ -17,7 +17,7 @@ type ShortURL struct {
 
 func NewShortURL() *ShortURL {
 	return &ShortURL{
-		url: make(dicturl.DictURL),
+		url: dicturl.NewDictURL(),
 	}
 
 }
@@ -72,7 +72,7 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 
 func (s *ShortURL) AddOriginalURL(originalURL []byte) string {
 	shortURLKey := util.GenerateKey()
-	s.url[shortURLKey] = originalURL
+	s.url.AddURL(shortURLKey, originalURL)
 
 	return shortURLKey
 

@@ -8,6 +8,7 @@ import (
 var Config struct {
 	ServerPort  string
 	BaseAddress string
+	LogLevel    string
 }
 
 func ConfigServerPort() {
@@ -26,6 +27,15 @@ func ConfigBaseAddress() {
 	if envBaseURL := os.Getenv("BASE_URL"); envBaseURL != "" {
 		Config.BaseAddress = envBaseURL
 
+	}
+
+}
+
+func ConfigLogger() {
+	flag.StringVar(&Config.LogLevel, "l", "info", "log level")
+
+	if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {
+		Config.LogLevel = envLogLevel
 	}
 
 }
