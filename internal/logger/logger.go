@@ -22,7 +22,7 @@ func Initialize(level string) error {
 	if err != nil {
 		return err
 	}
-	// устанавливаем синглтон
+
 	Log = zl
 	return nil
 }
