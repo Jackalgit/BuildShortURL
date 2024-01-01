@@ -13,3 +13,11 @@ Content-Type: text/plain
 
 ###
 
+POST http://localhost:8080/api/shorten
+Content-Type: application/json
+
+{
+  "url": "https://practicum.yandex.ru"
+}
+
+###
