@@ -1,7 +1,10 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/Jackalgit/BuildShortURL/internal/models"
+	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -101,6 +104,68 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 
 			assert.Equal(t, tc.Body, string(s.url[string(bodyResult)[1:]]))
 
+		})
+	}
+
+}
+
+func TestShortURL_APIShortURL(t *testing.T) {
+	dictURL := NewShortURL()
+	handler := http.HandlerFunc(dictURL.APIShortURL)
+	srv := httptest.NewServer(handler)
+	defer srv.Close()
+
+	RequestBody := `{"url": "https://practicum.yandex.ru"}`
+
+	tests := []struct {
+		name         string
+		method       string
+		body         string
+		statusCode   int
+		expectedBody string
+	}{
+		{name: "Test MethodGet", method: http.MethodGet, statusCode: http.StatusMethodNotAllowed, expectedBody: ""},
+		{name: "Test MethodPut", method: http.MethodPut, statusCode: http.StatusMethodNotAllowed, expectedBody: ""},
+		{name: "Test MethodDelete", method: http.MethodDelete, statusCode: http.StatusMethodNotAllowed, expectedBody: ""},
+
+		{name: "Test MethodPost with out body", method: http.MethodPost, statusCode: http.StatusBadRequest, expectedBody: ""},
+		{
+			name:         "Test MethodPost with not correct json",
+			method:       http.MethodPost,
+			body:         "wrong",
+			statusCode:   http.StatusBadRequest,
+			expectedBody: "",
+		},
+		{
+			name:         "Test MethodPost with correct json",
+			method:       http.MethodPost,
+			body:         RequestBody,
+			statusCode:   http.StatusCreated,
+			expectedBody: "https://practicum.yandex.ru",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			req := resty.New().R()
+			req.Method = tc.method
+			req.URL = srv.URL
+
+			if len(tc.body) > 0 {
+				req.SetHeader("Content-Type", "application/json")
+				req.SetBody(tc.body)
+			}
+
+			resp, err := req.Send()
+			assert.NoError(t, err, "error making HTTP request")
+
+			assert.Equal(t, tc.statusCode, resp.StatusCode(), "Response code didn't match expected")
+			// проверяем, что сохранилось в dictURL
+			if tc.expectedBody != "" {
+				var respons models.Response
+				// десериализуем resp.Body json в go model Response
+				json.Unmarshal(resp.Body(), &respons)
+				assert.Equal(t, tc.expectedBody, string(dictURL.url[respons.Result[1:]]))
+			}
 		})
 	}
 
