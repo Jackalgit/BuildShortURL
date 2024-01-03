@@ -7,8 +7,6 @@ www.ivan.ru
 
 # @no-redirect
 GET http://localhost:8080/yifYGPLeCV
-
-
 Content-Type: text/plain
 
 ###
