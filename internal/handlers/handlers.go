@@ -69,7 +69,8 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	originalURL, found := s.url[shortURLKey]
-	logger.Log.Info("Оригинальный урл", zap.String("url", fmt.Sprint(originalURL)))
+	logger.Log.Info("Оригинальный урл байт", zap.String("url", fmt.Sprint(originalURL)))
+	logger.Log.Info("Оригинальный урл", zap.String("url", string(originalURL)))
 	if !found {
 		http.Error(w, "originalURL not found", http.StatusNotFound)
 		return
