@@ -9,11 +9,13 @@ func GzipMiddleware(h http.Handler) http.Handler {
 
 	gzipFn := func(w http.ResponseWriter, r *http.Request) {
 
-		contentType := r.Header.Get("Content-Type")
-		if contentType != "application/json" || contentType != "text/html" {
+		if !strings.Contains(r.Header.Get("Content-Type"), "application/json, text/html") {
+			// если Content-Type не поддерживается, передаём управление
+			// дальше без изменений
 			h.ServeHTTP(w, r)
 			return
 		}
+
 		// по умолчанию устанавливаем оригинальный http.ResponseWriter как тот,
 		// который будем передавать следующей функции
 		ow := w
