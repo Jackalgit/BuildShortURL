@@ -60,7 +60,7 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logger.Log.Info("Словарь урлов", zap.String("url", fmt.Sprint(s.url)))
-	logger.Log.Info("кусок пути как ключь", zap.String("url", r.URL.Path[1:]))
+	logger.Log.Info("кусок пути как ключ", zap.String("url", r.URL.Path[1:]))
 
 	shortURLKey := r.URL.Path[1:]
 	if shortURLKey == "" {
