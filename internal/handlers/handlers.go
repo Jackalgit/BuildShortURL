@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	dicturl "github.com/Jackalgit/BuildShortURL/internal/dictURL"
+	"github.com/Jackalgit/BuildShortURL/internal/logger"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/Jackalgit/BuildShortURL/internal/util"
+	"go.uber.org/zap"
 	"io"
 	"log"
 	"net/http"
@@ -56,6 +58,10 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Only Get requests are allowed!", http.StatusMethodNotAllowed)
 		return
 	}
+
+	logger.Log.Info("", zap.String("url", fmt.Sprint(s.url)))
+	logger.Log.Info("", zap.String("url", r.URL.Path[1:]))
+
 	shortURLKey := r.URL.Path[1:]
 	if shortURLKey == "" {
 		http.Error(w, "Don't shortUrlKey", http.StatusBadRequest)
