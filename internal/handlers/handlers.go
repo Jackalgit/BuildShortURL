@@ -36,6 +36,8 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	originalURL, err := io.ReadAll(r.Body)
+	logger.Log.Info("тело запроса при урл /", zap.String("url", fmt.Sprint(originalURL)))
+
 	if err != nil {
 		log.Println("Read originalURL ERROR: ", err)
 	}
@@ -109,6 +111,8 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	originalURL := []byte(request.URL)
+	logger.Log.Info("тело запроса при урл /shorten", zap.String("url", fmt.Sprint(originalURL)))
+	logger.Log.Info("тело запроса при урл /shorten", zap.String("url", string(originalURL)))
 	shortURLKey := s.AddOriginalURL(originalURL)
 	flag.Parse()
 	result := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
