@@ -7,11 +7,10 @@ import (
 	"io"
 )
 
-func RequestJsonToStruct(body io.Reader) (*models.Request, error) {
+func RequestJSONToStruct(body io.Reader) (*models.Request, error) {
 	var request models.Request
 
 	var buf bytes.Buffer
-	// читаем тело запроса
 	_, err := buf.ReadFrom(body)
 	if err != nil {
 		return &request, err

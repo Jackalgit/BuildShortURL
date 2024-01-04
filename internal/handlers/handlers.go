@@ -45,7 +45,7 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 
 	shortURLKey := s.AddOriginalURL(originalURL)
 
-	util.SaveURLToJsonFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
+	util.SaveURLToJSONFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
 
 	w.Header().Set("Content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
@@ -92,7 +92,7 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	request, err := util.RequestJsonToStruct(r.Body)
+	request, err := util.RequestJSONToStruct(r.Body)
 	if err != nil {
 		http.Error(w, "Not read body", http.StatusBadRequest)
 		return
@@ -103,13 +103,13 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 	shortURLKey := s.AddOriginalURL(originalURL)
 	shortURL := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
 
-	util.SaveURLToJsonFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
+	util.SaveURLToJSONFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
 
 	respons := models.Response{
 		Result: shortURL,
 	}
 
-	responsJson, err := json.Marshal(respons)
+	responsJSON, err := json.Marshal(respons)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -117,6 +117,6 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	w.Write(responsJson)
+	w.Write(responsJSON)
 
 }
