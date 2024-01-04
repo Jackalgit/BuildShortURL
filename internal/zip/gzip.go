@@ -2,6 +2,9 @@ package zip
 
 import (
 	"compress/gzip"
+	"fmt"
+	"github.com/Jackalgit/BuildShortURL/internal/logger"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 )
@@ -49,6 +52,8 @@ type compressReader struct {
 
 func newCompressReader(r io.ReadCloser) (*compressReader, error) {
 	zr, err := gzip.NewReader(r)
+	logger.Log.Info("тело запроса", zap.String("url", fmt.Sprint(r)))
+	logger.Log.Info("тело запроса", zap.String("url", fmt.Sprint(zr)))
 	if err != nil {
 		return nil, err
 	}
