@@ -12,7 +12,7 @@ func GzipMiddleware(h http.Handler) http.Handler {
 
 		fmt.Println(r.Header.Get("Content-Type"))
 
-		if !strings.Contains("application/json,text/html", r.Header.Get("Content-Type")) {
+		if !strings.Contains("application/json,text/html,application/x-gzip", r.Header.Get("Content-Type")) {
 			// если Content-Type не поддерживается, передаём управление
 			// дальше без изменений
 			h.ServeHTTP(w, r)
