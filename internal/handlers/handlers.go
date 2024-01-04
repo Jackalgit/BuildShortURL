@@ -37,6 +37,7 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 	}
 	originalURL, err := io.ReadAll(r.Body)
 	logger.Log.Info("тело запроса при урл /", zap.String("url", fmt.Sprint(originalURL)))
+	logger.Log.Info("тело запроса при урл /", zap.String("url", string(originalURL)))
 
 	if err != nil {
 		log.Println("Read originalURL ERROR: ", err)
