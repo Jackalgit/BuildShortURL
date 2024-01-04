@@ -6,9 +6,10 @@ import (
 )
 
 var Config struct {
-	ServerPort  string
-	BaseAddress string
-	LogLevel    string
+	ServerPort      string
+	BaseAddress     string
+	LogLevel        string
+	FileStoragePath string
 }
 
 func ConfigServerPort() {
@@ -36,6 +37,15 @@ func ConfigLogger() {
 
 	if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {
 		Config.LogLevel = envLogLevel
+	}
+
+}
+
+func ConfigFileStorage() {
+	flag.StringVar(&Config.FileStoragePath, "f", "tmp/short-url-db.json", "Path to FileStorage")
+
+	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {
+		Config.FileStoragePath = envFileStoragePath
 	}
 
 }

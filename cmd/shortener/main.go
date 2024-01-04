@@ -16,6 +16,7 @@ func init() {
 	config.ConfigServerPort()
 	config.ConfigBaseAddress()
 	config.ConfigLogger()
+	config.ConfigFileStorage()
 
 }
 
