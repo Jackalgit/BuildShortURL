@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"os"
 )
 
@@ -10,6 +11,7 @@ var Config struct {
 	BaseAddress     string
 	LogLevel        string
 	FileStoragePath string
+	DatabaseDSN     string
 }
 
 func ConfigServerPort() {
@@ -46,6 +48,18 @@ func ConfigFileStorage() {
 
 	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {
 		Config.FileStoragePath = envFileStoragePath
+	}
+
+}
+
+func ConfigDatabaseDSN() {
+	ps := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		`localhost`, `5432`, `ivan`, `XXXXXXXX`, `shorturl`)
+
+	flag.StringVar(&Config.DatabaseDSN, "d", ps, "Database source name")
+
+	if envDatabaseDSN := os.Getenv("DATABASE_DSN"); envDatabaseDSN != "" {
+		Config.DatabaseDSN = envDatabaseDSN
 	}
 
 }

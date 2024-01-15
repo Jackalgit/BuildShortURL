@@ -130,8 +130,7 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 
 func (s *ShortURL) PingDB(w http.ResponseWriter, r *http.Request) {
 
-	ps := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		`localhost`, `5432`, `ivan`, `XXXXXXXX`, `shorturl`)
+	ps := config.Config.DatabaseDSN
 
 	db, err := sql.Open("pgx", ps)
 	if err != nil {
