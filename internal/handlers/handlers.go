@@ -120,3 +120,7 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 	w.Write(responsJSON)
 
 }
+
+func (s ShortURL) PingDB(w http.ResponseWriter, r *http.Request) {
+
+}
