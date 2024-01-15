@@ -11,7 +11,6 @@ import (
 	"go.uber.org/zap"
 	"log"
 	"net/http"
-	"os"
 	"os/signal"
 	"syscall"
 )
@@ -25,8 +24,8 @@ func init() {
 }
 
 func main() {
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+	//stop := make(chan os.Signal, 1)
+	//signal.Notify(stop, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
 	ctx, _ := signal.NotifyContext(
 		context.Background(),
