@@ -1,10 +1,13 @@
 package handlers
 
 import (
+	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	dicturl "github.com/Jackalgit/BuildShortURL/internal/dictURL"
+	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/Jackalgit/BuildShortURL/internal/util"
 	"io"
 	"log"
@@ -44,7 +47,6 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 	flag.Parse()
-	//fmt.Println(fmt.Sprint(config.Config.BaseAddress, config.Config.ServerPort, "/", shortURLKey))
 	w.Write([]byte(fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)))
 
 }
@@ -75,5 +77,46 @@ func (s *ShortURL) AddOriginalURL(originalURL []byte) string {
 	s.url.AddURL(shortURLKey, originalURL)
 
 	return shortURLKey
+
+}
+
+func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Only Post requests are allowed!", http.StatusMethodNotAllowed)
+		return
+	}
+	var request models.Request
+
+	var buf bytes.Buffer
+	// читаем тело запроса
+	_, err := buf.ReadFrom(r.Body)
+	if err != nil {
+		http.Error(w, "Not read body", http.StatusBadRequest)
+		return
+	}
+	// десериализуем JSON в Request
+	if err = json.Unmarshal(buf.Bytes(), &request); err != nil {
+		http.Error(w, "Not parsing request json", http.StatusBadRequest)
+		return
+	}
+
+	originalURL := []byte(request.URL)
+	shortURLKey := s.AddOriginalURL(originalURL)
+	flag.Parse()
+	result := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
+
+	respons := models.Response{
+		Result: result,
+	}
+
+	resp, err := json.Marshal(respons)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	w.Write(resp)
 
 }

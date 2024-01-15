@@ -43,6 +43,7 @@ func runServer() error {
 
 	router.HandleFunc("/", dictURL.MakeShortURL).Methods("POST")
 	router.HandleFunc("/{id}", dictURL.GetURL).Methods("GET")
+	router.HandleFunc("/api/shorten", dictURL.APIShortURL).Methods("POST")
 	router.Use(middelware.LoggingMiddleware)
 
 	return http.ListenAndServe(config.Config.ServerPort, router)
