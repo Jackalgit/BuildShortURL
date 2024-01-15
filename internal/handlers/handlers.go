@@ -1,9 +1,7 @@
 package handlers
 
 import (
-	"bytes"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	dicturl "github.com/Jackalgit/BuildShortURL/internal/dictURL"
@@ -30,14 +28,12 @@ func NewShortURL() *ShortURL {
 func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 	// Оставляю проверку метода т.к. во 2 инкременте мы тестируем работу функции, а не работу запущенного сервера.
 	// Или как вариан из тестов убрать проверку методов запроса.
-
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
 		return
 	}
 	originalURL, err := io.ReadAll(r.Body)
-	logger.Log.Info("тело запроса при урл /", zap.String("url", fmt.Sprint(originalURL)))
-	logger.Log.Info("тело запроса при урл /", zap.String("url", string(originalURL)))
+	logger.Log.Info("originalURL при запросе на эндпоинта /", zap.String("url", string(originalURL)))
 
 	if err != nil {
 		log.Println("Read originalURL ERROR: ", err)
@@ -49,9 +45,10 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 
 	shortURLKey := s.AddOriginalURL(originalURL)
 
+	util.SaveURLToJSONFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
+
 	w.Header().Set("Content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
-	flag.Parse()
 	w.Write([]byte(fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)))
 
 }
@@ -62,8 +59,7 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Log.Info("Словарь урлов", zap.String("url", fmt.Sprint(s.url)))
-	logger.Log.Info("кусок пути как ключ", zap.String("url", r.URL.Path[1:]))
+	logger.Log.Info("Передаваемый ключ в пути запроса", zap.String("url", r.URL.Path[1:]))
 
 	shortURLKey := r.URL.Path[1:]
 	if shortURLKey == "" {
@@ -72,8 +68,7 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	originalURL, found := s.url[shortURLKey]
-	logger.Log.Info("Оригинальный урл байт", zap.String("url", fmt.Sprint(originalURL)))
-	logger.Log.Info("Оригинальный урл", zap.String("url", string(originalURL)))
+	logger.Log.Info("originalURL при GET запросе", zap.String("url", string(originalURL)))
 	if !found {
 		http.Error(w, "originalURL not found", http.StatusNotFound)
 		return
@@ -96,33 +91,25 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Only Post requests are allowed!", http.StatusMethodNotAllowed)
 		return
 	}
-	var request models.Request
 
-	var buf bytes.Buffer
-	// читаем тело запроса
-	_, err := buf.ReadFrom(r.Body)
+	request, err := util.RequestJSONToStruct(r.Body)
 	if err != nil {
 		http.Error(w, "Not read body", http.StatusBadRequest)
 		return
 	}
-	// десериализуем JSON в Request
-	if err = json.Unmarshal(buf.Bytes(), &request); err != nil {
-		http.Error(w, "Not parsing request json", http.StatusBadRequest)
-		return
-	}
 
 	originalURL := []byte(request.URL)
-	logger.Log.Info("тело запроса при урл /shorten", zap.String("url", fmt.Sprint(originalURL)))
-	logger.Log.Info("тело запроса при урл /shorten", zap.String("url", string(originalURL)))
+	logger.Log.Info("originalURL при запросе эндпоинта /api/shorten", zap.String("url", string(originalURL)))
 	shortURLKey := s.AddOriginalURL(originalURL)
-	flag.Parse()
-	result := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
+	shortURL := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
+
+	util.SaveURLToJSONFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
 
 	respons := models.Response{
-		Result: result,
+		Result: shortURL,
 	}
 
-	resp, err := json.Marshal(respons)
+	responsJSON, err := json.Marshal(respons)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -130,6 +117,6 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	w.Write(resp)
+	w.Write(responsJSON)
 
 }
