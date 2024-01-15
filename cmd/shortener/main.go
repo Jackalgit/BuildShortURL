@@ -2,10 +2,8 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"flag"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
-	"github.com/Jackalgit/BuildShortURL/internal/database"
 	"github.com/Jackalgit/BuildShortURL/internal/handlers"
 	"github.com/Jackalgit/BuildShortURL/internal/logger"
 	"github.com/Jackalgit/BuildShortURL/internal/zip"
@@ -39,19 +37,13 @@ func main() {
 
 	flag.Parse()
 
-	db, err := database.OpenDB()
-	if err != nil {
-		log.Println("open DB:", err)
-	}
-	defer db.Close()
-
-	if err := runServer(ctx, db); err != nil {
+	if err := runServer(ctx); err != nil {
 		log.Println("runServer ERROR: ", err)
 	}
 
 }
 
-func runServer(ctx context.Context, db *sql.DB) error {
+func runServer(ctx context.Context) error {
 
 	if err := logger.Initialize(config.Config.LogLevel); err != nil {
 		return err
@@ -59,7 +51,7 @@ func runServer(ctx context.Context, db *sql.DB) error {
 
 	logger.Log.Info("Running server", zap.String("address", config.Config.ServerPort))
 
-	dictURL := handlers.NewShortURL(ctx, db)
+	dictURL := handlers.NewShortURL(ctx)
 
 	router := mux.NewRouter()
 

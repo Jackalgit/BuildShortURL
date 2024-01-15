@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
@@ -84,7 +85,9 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 			r := httptest.NewRequest(tc.method, "/", bodyReader)
 			w := httptest.NewRecorder()
 
-			s := NewShortURL()
+			ctx := context.Background()
+
+			s := NewShortURL(ctx)
 			s.MakeShortURL(w, r)
 
 			require.Equal(t, tc.statusCode, w.Code, "The response code does not match what is expected")
@@ -110,7 +113,9 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 }
 
 func TestShortURL_APIShortURL(t *testing.T) {
-	dictURL := NewShortURL()
+	ctx := context.Background()
+
+	dictURL := NewShortURL(ctx)
 	handler := http.HandlerFunc(dictURL.APIShortURL)
 	srv := httptest.NewServer(handler)
 	defer srv.Close()

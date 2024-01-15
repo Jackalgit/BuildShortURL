@@ -12,9 +12,7 @@ func OpenDB() (*sql.DB, error) {
 
 	db, err := sql.Open("pgx", ps)
 	if err != nil {
-		fmt.Errorf("[OpenDB] Не удалось открыть DB: %q", err)
-
-		return nil, err
+		return nil, fmt.Errorf("[OpenDB] Не удалось открыть DB: %q", err)
 	}
 
 	return db, nil

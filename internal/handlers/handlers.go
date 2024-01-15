@@ -10,6 +10,7 @@ import (
 	"github.com/Jackalgit/BuildShortURL/internal/logger"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/Jackalgit/BuildShortURL/internal/util"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"go.uber.org/zap"
 	"io"
 	"log"
@@ -19,14 +20,12 @@ import (
 
 type ShortURL struct {
 	ctx context.Context
-	db  *sql.DB
 	url dicturl.DictURL
 }
 
-func NewShortURL(ctx context.Context, db *sql.DB) *ShortURL {
+func NewShortURL(ctx context.Context) *ShortURL {
 	return &ShortURL{
 		ctx: ctx,
-		db:  db,
 		url: dicturl.NewDictURL(),
 	}
 
@@ -131,9 +130,18 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 
 func (s *ShortURL) PingDB(w http.ResponseWriter, r *http.Request) {
 
+	ps := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		`localhost`, `5432`, `ivan`, `XXXXXXXX`, `shorturl`)
+
+	db, err := sql.Open("pgx", ps)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(s.ctx, 1*time.Second)
 	defer cancel()
-	if err := s.db.PingContext(ctx); err != nil {
+	if err := db.PingContext(ctx); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
