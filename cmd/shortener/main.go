@@ -18,7 +18,7 @@ func init() {
 	config.ConfigBaseAddress()
 	config.ConfigLogger()
 	config.ConfigFileStorage()
-
+	config.ConfigDatabaseDSN()
 }
 
 func main() {
