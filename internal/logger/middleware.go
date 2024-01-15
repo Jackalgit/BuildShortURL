@@ -1,7 +1,6 @@
-package middelware
+package logger
 
 import (
-	"github.com/Jackalgit/BuildShortURL/internal/logger"
 	"go.uber.org/zap"
 	"net/http"
 	"time"
@@ -50,7 +49,7 @@ func LoggingMiddleware(h http.Handler) http.Handler {
 
 		duration := time.Since(start)
 
-		logger.Log.Info(
+		Log.Info(
 			"",
 			zap.String("uri", r.RequestURI),
 			zap.String("method", r.Method),

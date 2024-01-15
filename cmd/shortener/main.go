@@ -5,7 +5,7 @@ import (
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	"github.com/Jackalgit/BuildShortURL/internal/handlers"
 	"github.com/Jackalgit/BuildShortURL/internal/logger"
-	"github.com/Jackalgit/BuildShortURL/internal/middelware"
+	"github.com/Jackalgit/BuildShortURL/internal/zip"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 	"log"
@@ -44,7 +44,7 @@ func runServer() error {
 	router.HandleFunc("/", dictURL.MakeShortURL).Methods("POST")
 	router.HandleFunc("/{id}", dictURL.GetURL).Methods("GET")
 	router.HandleFunc("/api/shorten", dictURL.APIShortURL).Methods("POST")
-	router.Use(middelware.LoggingMiddleware)
+	router.Use(logger.LoggingMiddleware, zip.GzipMiddleware)
 
 	return http.ListenAndServe(config.Config.ServerPort, router)
 

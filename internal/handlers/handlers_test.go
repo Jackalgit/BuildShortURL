@@ -159,6 +159,8 @@ func TestShortURL_APIShortURL(t *testing.T) {
 			assert.NoError(t, err, "error making HTTP request")
 
 			assert.Equal(t, tc.statusCode, resp.StatusCode(), "Response code didn't match expected")
+			fmt.Println(dictURL.url)
+			fmt.Println(string(resp.Body()))
 			// проверяем, что сохранилось в dictURL
 			if tc.expectedBody != "" {
 				var respons models.Response
