@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
@@ -12,14 +14,19 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 )
 
 type ShortURL struct {
+	ctx context.Context
+	db  *sql.DB
 	url dicturl.DictURL
 }
 
-func NewShortURL() *ShortURL {
+func NewShortURL(ctx context.Context, db *sql.DB) *ShortURL {
 	return &ShortURL{
+		ctx: ctx,
+		db:  db,
 		url: dicturl.NewDictURL(),
 	}
 
@@ -67,7 +74,8 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	originalURL, found := s.url[shortURLKey]
+	originalURL, found := s.url.GetURL(shortURLKey)
+
 	logger.Log.Info("originalURL при GET запросе", zap.String("url", string(originalURL)))
 	if !found {
 		http.Error(w, "originalURL not found", http.StatusNotFound)
@@ -121,6 +129,14 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (s ShortURL) PingDB(w http.ResponseWriter, r *http.Request) {
+func (s *ShortURL) PingDB(w http.ResponseWriter, r *http.Request) {
+
+	ctx, cancel := context.WithTimeout(s.ctx, 1*time.Second)
+	defer cancel()
+	if err := s.db.PingContext(ctx); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 
 }

@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"flag"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
+	"github.com/Jackalgit/BuildShortURL/internal/database"
 	"github.com/Jackalgit/BuildShortURL/internal/handlers"
 	"github.com/Jackalgit/BuildShortURL/internal/logger"
 	"github.com/Jackalgit/BuildShortURL/internal/zip"
@@ -37,13 +39,19 @@ func main() {
 
 	flag.Parse()
 
-	if err := runServer(ctx); err != nil {
+	db, err := database.OpenDB()
+	if err != nil {
+		log.Println("open DB:", err)
+	}
+	defer db.Close()
+
+	if err := runServer(ctx, db); err != nil {
 		log.Println("runServer ERROR: ", err)
 	}
 
 }
 
-func runServer(ctx context.Context) error {
+func runServer(ctx context.Context, db *sql.DB) error {
 
 	if err := logger.Initialize(config.Config.LogLevel); err != nil {
 		return err
@@ -51,14 +59,14 @@ func runServer(ctx context.Context) error {
 
 	logger.Log.Info("Running server", zap.String("address", config.Config.ServerPort))
 
-	dictURL := handlers.NewShortURL()
+	dictURL := handlers.NewShortURL(ctx, db)
 
 	router := mux.NewRouter()
 
+	router.HandleFunc("/ping", dictURL.PingDB).Methods("GET")
 	router.HandleFunc("/", dictURL.MakeShortURL).Methods("POST")
 	router.HandleFunc("/{id}", dictURL.GetURL).Methods("GET")
 	router.HandleFunc("/api/shorten", dictURL.APIShortURL).Methods("POST")
-	router.HandleFunc("/ping", dictURL.PingDB).Methods("GET")
 
 	router.Use(logger.LoggingMiddleware, zip.GzipMiddleware)
 

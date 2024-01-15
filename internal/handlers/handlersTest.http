@@ -19,3 +19,8 @@ Content-Type: application/json
 }
 
 ###
+
+GET http://localhost:8080/ping
+Content-Type: text/plain
+
+###
