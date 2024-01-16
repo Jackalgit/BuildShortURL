@@ -4,7 +4,7 @@ import (
 	"context"
 	"flag"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
-	"github.com/Jackalgit/BuildShortURL/internal/handlers"
+	"github.com/Jackalgit/BuildShortURL/internal/initialization"
 	"github.com/Jackalgit/BuildShortURL/internal/logger"
 	"github.com/Jackalgit/BuildShortURL/internal/zip"
 	"github.com/gorilla/mux"
@@ -48,14 +48,14 @@ func runServer(ctx context.Context) error {
 
 	logger.Log.Info("Running server", zap.String("address", config.Config.ServerPort))
 
-	dictURL := handlers.NewShortURL(ctx)
+	storage := initialization.InitStorage(ctx)
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/ping", dictURL.PingDB).Methods("GET")
-	router.HandleFunc("/", dictURL.MakeShortURL).Methods("POST")
-	router.HandleFunc("/{id}", dictURL.GetURL).Methods("GET")
-	router.HandleFunc("/api/shorten", dictURL.APIShortURL).Methods("POST")
+	router.HandleFunc("/ping", storage.PingDB).Methods("GET")
+	router.HandleFunc("/", storage.MakeShortURL).Methods("POST")
+	router.HandleFunc("/{id}", storage.GetURL).Methods("GET")
+	router.HandleFunc("/api/shorten", storage.APIShortURL).Methods("POST")
 
 	router.Use(logger.LoggingMiddleware, zip.GzipMiddleware)
 

@@ -1,20 +1,50 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func OpenDB() (*sql.DB, error) {
-	ps := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		`localhost`, `5432`, `ivan`, `XXXXXXXX`, `shorturl`)
+type DataBase struct {
+	Connect *sql.DB
+}
+
+func NewDataBase() DataBase {
+	ps := config.Config.DatabaseDSN
 
 	db, err := sql.Open("pgx", ps)
 	if err != nil {
-		return nil, fmt.Errorf("[OpenDB] Не удалось открыть DB: %q", err)
+		fmt.Errorf("[Open DB] Не удалось установить соединение с базой данных: %q", err)
 	}
 
-	return db, nil
+	return DataBase{
+		Connect: db,
+	}
+}
+
+func (db DataBase) AddURL(ctx context.Context, shortURLKey string, originalURL []byte) {
+
+}
+
+func (db DataBase) GetURL(ctx context.Context, shortURLKey string) ([]byte, bool) {
+
+	row := db.Connect.QueryRowContext(
+		ctx,
+		"SELECT originalURL FROM shorturl WHERE short_key = ?", shortURLKey,
+	)
+
+	var originalURL sql.NullString
+	err := row.Scan(&originalURL)
+	if err != nil {
+		fmt.Errorf("[row Scan] Не удалось преобразовать данные: %q", err)
+	}
+
+	if originalURL.Valid {
+		return []byte(originalURL.String), true
+	}
+	return nil, false
 
 }

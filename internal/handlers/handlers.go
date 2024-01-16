@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
-	dicturl "github.com/Jackalgit/BuildShortURL/internal/dictURL"
 	"github.com/Jackalgit/BuildShortURL/internal/logger"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/Jackalgit/BuildShortURL/internal/util"
@@ -18,17 +17,14 @@ import (
 	"time"
 )
 
-type ShortURL struct {
-	ctx context.Context
-	url dicturl.DictURL
+type Repository interface {
+	AddURL(ctx context.Context, shortURLKey string, originalURL []byte)
+	GetURL(ctx context.Context, shortURLKey string) ([]byte, bool)
 }
 
-func NewShortURL(ctx context.Context) *ShortURL {
-	return &ShortURL{
-		ctx: ctx,
-		url: dicturl.NewDictURL(),
-	}
-
+type ShortURL struct {
+	Ctx     context.Context
+	Storage Repository
 }
 
 func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
@@ -49,8 +45,9 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortURLKey := s.AddOriginalURL(originalURL)
+	shortURLKey := util.GenerateKey()
 
+	s.Storage.AddURL(s.Ctx, shortURLKey, originalURL)
 	util.SaveURLToJSONFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
 
 	w.Header().Set("Content-type", "text/plain")
@@ -73,7 +70,7 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	originalURL, found := s.url.GetURL(shortURLKey)
+	originalURL, found := s.Storage.GetURL(s.Ctx, shortURLKey)
 
 	logger.Log.Info("originalURL при GET запросе", zap.String("url", string(originalURL)))
 	if !found {
@@ -82,14 +79,6 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Location", string(originalURL))
 	w.WriteHeader(http.StatusTemporaryRedirect)
-
-}
-
-func (s *ShortURL) AddOriginalURL(originalURL []byte) string {
-	shortURLKey := util.GenerateKey()
-	s.url.AddURL(shortURLKey, originalURL)
-
-	return shortURLKey
 
 }
 
@@ -106,8 +95,12 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	originalURL := []byte(request.URL)
+
 	logger.Log.Info("originalURL при запросе эндпоинта /api/shorten", zap.String("url", string(originalURL)))
-	shortURLKey := s.AddOriginalURL(originalURL)
+
+	shortURLKey := util.GenerateKey()
+	s.Storage.AddURL(s.Ctx, shortURLKey, originalURL)
+
 	shortURL := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
 
 	util.SaveURLToJSONFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
@@ -138,12 +131,14 @@ func (s *ShortURL) PingDB(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(s.ctx, 1*time.Second)
+	//ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(s.Ctx, 1*time.Second)
 	defer cancel()
 	if err := db.PingContext(ctx); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	db.Close()
 	w.WriteHeader(http.StatusOK)
 
 }
