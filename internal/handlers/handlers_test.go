@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	dicturl "github.com/Jackalgit/BuildShortURL/internal/dictURL"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/go-resty/resty/v2"
 	"github.com/stretchr/testify/assert"
@@ -16,7 +17,10 @@ import (
 )
 
 func TestShortURL_GetURL(t *testing.T) {
-	s := ShortURL{url: map[string][]byte{"qweQWErtyQ": []byte("long long long url")}}
+	ctx := context.Background()
+	dictURL := dicturl.NewDictURL()
+	dictURL.AddURL(ctx, "qweQWErtyQ", []byte("long long long url"))
+	s := ShortURL{Ctx: ctx, Storage: dictURL}
 
 	tests := []struct {
 		name       string
@@ -87,7 +91,10 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 
 			ctx := context.Background()
 
-			s := NewShortURL(ctx)
+			dictURL := dicturl.NewDictURL()
+			s := ShortURL{Ctx: ctx, Storage: dictURL}
+
+			//s := NewShortURL(ctx)
 			s.MakeShortURL(w, r)
 
 			require.Equal(t, tc.statusCode, w.Code, "The response code does not match what is expected")
@@ -105,7 +112,10 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 			err = result.Body.Close()
 			require.NoError(t, err)
 
-			assert.Equal(t, tc.Body, string(s.url[string(bodyResult)[1:]]))
+			originalURL, _ := s.Storage.GetURL(ctx, string(bodyResult)[1:])
+			assert.Equal(t, tc.Body, string(originalURL))
+
+			//assert.Equal(t, tc.Body, string(s.Storage[string(bodyResult)[1:]]))
 
 		})
 	}
@@ -115,8 +125,11 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 func TestShortURL_APIShortURL(t *testing.T) {
 	ctx := context.Background()
 
-	dictURL := NewShortURL(ctx)
-	handler := http.HandlerFunc(dictURL.APIShortURL)
+	dictURL := dicturl.NewDictURL()
+	s := ShortURL{Ctx: ctx, Storage: dictURL}
+
+	//dictURL := NewShortURL(ctx)
+	handler := http.HandlerFunc(s.APIShortURL)
 	srv := httptest.NewServer(handler)
 	defer srv.Close()
 
@@ -164,14 +177,16 @@ func TestShortURL_APIShortURL(t *testing.T) {
 			assert.NoError(t, err, "error making HTTP request")
 
 			assert.Equal(t, tc.statusCode, resp.StatusCode(), "Response code didn't match expected")
-			fmt.Println(dictURL.url)
+			fmt.Println(s.Storage)
 			fmt.Println(string(resp.Body()))
 			// проверяем, что сохранилось в dictURL
 			if tc.expectedBody != "" {
 				var respons models.Response
 				// десериализуем resp.Body json в go model Response
 				json.Unmarshal(resp.Body(), &respons)
-				assert.Equal(t, tc.expectedBody, string(dictURL.url[respons.Result[1:]]))
+
+				originalURL, _ := s.Storage.GetURL(ctx, respons.Result[1:])
+				assert.Equal(t, tc.expectedBody, string(originalURL))
 			}
 		})
 	}

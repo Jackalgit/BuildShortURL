@@ -3,8 +3,8 @@ package filestorage
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
+	"log"
 	"os"
 )
 
@@ -20,7 +20,7 @@ func NewFileStorage(path string) FileStorage {
 func (f FileStorage) AddURL(ctx context.Context, shortURLKey string, originalURL []byte) {
 	file, err := os.OpenFile(f.Path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
-		fmt.Errorf("[OpenFile] Не удалось открыть json file: %q", err)
+		log.Printf("[OpenFile] Не удалось открыть json file: %q", err)
 
 	}
 	defer file.Close()
@@ -34,7 +34,7 @@ func (f FileStorage) AddURL(ctx context.Context, shortURLKey string, originalURL
 	data = append(data, '\n')
 	_, err = file.Write(data)
 	if err != nil {
-		fmt.Errorf("[Write to File] Не удалось записать LastURL json file: %q", err)
+		log.Printf("[Write to File] Не удалось записать LastURL json file: %q", err)
 
 	}
 

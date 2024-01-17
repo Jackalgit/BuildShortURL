@@ -3,9 +3,9 @@ package database
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"log"
 )
 
 type DataBase struct {
@@ -17,7 +17,7 @@ func NewDataBase() DataBase {
 
 	db, err := sql.Open("pgx", ps)
 	if err != nil {
-		fmt.Errorf("[Open DB] Не удалось установить соединение с базой данных: %q", err)
+		log.Printf("[Open DB] Не удалось установить соединение с базой данных: %q", err)
 	}
 
 	return DataBase{
@@ -39,7 +39,7 @@ func (db DataBase) GetURL(ctx context.Context, shortURLKey string) ([]byte, bool
 	var originalURL sql.NullString
 	err := row.Scan(&originalURL)
 	if err != nil {
-		fmt.Errorf("[row Scan] Не удалось преобразовать данные: %q", err)
+		log.Printf("[row Scan] Не удалось преобразовать данные: %q", err)
 	}
 
 	if originalURL.Valid {
