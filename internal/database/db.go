@@ -6,19 +6,34 @@ import (
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"log"
+	"time"
 )
 
 type DataBase struct {
 	Connect *sql.DB
 }
 
-func NewDataBase() DataBase {
+func NewDataBase(ctx context.Context) DataBase {
 	ps := config.Config.DatabaseDSN
+	query := `CREATE TABLE IF NOT EXISTS storage_url(id int primary key, shortURLKey text, originalURL text)`
+
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
 
 	db, err := sql.Open("pgx", ps)
 	if err != nil {
 		log.Printf("[Open DB] Не удалось установить соединение с базой данных: %q", err)
 	}
+
+	res, err := db.ExecContext(ctx, query)
+	if err != nil {
+		log.Printf("[Create DB] Не удалось создать таблицу в база данных: %q", err)
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		log.Printf("Ошибка в получении количества строк: %q", err)
+	}
+	log.Printf("Количество строк: %d", rows)
 
 	return DataBase{
 		Connect: db,

@@ -13,16 +13,9 @@ func InitStorage(ctx context.Context) *handlers.ShortURL {
 	if config.Config.DatabaseDSN != "" {
 		return &handlers.ShortURL{
 			Ctx:     ctx,
-			Storage: database.NewDataBase(),
+			Storage: database.NewDataBase(ctx),
 		}
 	}
-
-	//if config.Config.FileStoragePath != "" {
-	//	return &handlers.ShortURL{
-	//		Ctx:     ctx,
-	//		Storage: filestorage.NewFileStorage(config.Config.FileStoragePath),
-	//	}
-	//}
 
 	return &handlers.ShortURL{
 		Ctx:     ctx,
