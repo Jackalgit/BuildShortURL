@@ -44,9 +44,9 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Body don't url", http.StatusBadRequest)
 		return
 	}
-
 	shortURLKey := util.GenerateKey()
 
+	log.Print("MakeShortURL")
 	s.Storage.AddURL(s.Ctx, shortURLKey, originalURL)
 
 	if config.Config.DatabaseDSN == "" {
@@ -72,7 +72,7 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Don't shortUrlKey", http.StatusBadRequest)
 		return
 	}
-
+	log.Print("GetURL")
 	originalURL, found := s.Storage.GetURL(s.Ctx, shortURLKey)
 
 	logger.Log.Info("originalURL при GET запросе", zap.String("url", string(originalURL)))
@@ -102,6 +102,9 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 	logger.Log.Info("originalURL при запросе эндпоинта /api/shorten", zap.String("url", string(originalURL)))
 
 	shortURLKey := util.GenerateKey()
+
+	log.Print("APIShortURL")
+
 	s.Storage.AddURL(s.Ctx, shortURLKey, originalURL)
 
 	if config.Config.DatabaseDSN == "" {

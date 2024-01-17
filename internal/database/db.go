@@ -29,6 +29,7 @@ func NewDataBase(ctx context.Context) DataBase {
 	if err != nil {
 		log.Printf("[Create DB] Не удалось создать таблицу в база данных: %q", err)
 	}
+	log.Print("Создана таблицы для хранения УРЛ")
 	//rows, err := res.RowsAffected()
 	//if err != nil {
 	//	log.Printf("Ошибка в получении количества строк: %q", err)
