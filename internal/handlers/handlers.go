@@ -134,6 +134,7 @@ func (s *ShortURL) PingDB(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	defer db.Close()
 
 	//ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
 	ctx, cancel := context.WithTimeout(s.Ctx, 1*time.Second)
@@ -142,7 +143,6 @@ func (s *ShortURL) PingDB(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	db.Close()
 	w.WriteHeader(http.StatusOK)
 
 }
