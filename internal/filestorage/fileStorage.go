@@ -18,6 +18,11 @@ func NewFileStorage(path string) FileStorage {
 	}
 }
 func (f FileStorage) AddURL(ctx context.Context, shortURLKey string, originalURL []byte) {
+
+	if f.Path == "" {
+		return
+	}
+
 	file, err := os.OpenFile(f.Path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		log.Printf("[OpenFile] Не удалось открыть json file: %q", err)
