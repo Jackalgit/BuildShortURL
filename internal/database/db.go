@@ -14,12 +14,11 @@ type DataBase struct {
 }
 
 func NewDataBase(ctx context.Context) DataBase {
-	ps := config.Config.DatabaseDSN
 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
-	db, err := sql.Open("pgx", ps)
+	db, err := sql.Open("pgx", config.Config.DatabaseDSN)
 	if err != nil {
 		log.Printf("[Open DB] Не удалось установить соединение с базой данных: %q", err)
 	}
@@ -48,12 +47,13 @@ func NewDataBase(ctx context.Context) DataBase {
 }
 
 func (d DataBase) AddURL(ctx context.Context, shortURLKey string, originalURL []byte) {
-	ps := config.Config.DatabaseDSN
+
+	log.Print("Вызван метод добавления урл")
 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
-	db, err := sql.Open("pgx", ps)
+	db, err := sql.Open("pgx", config.Config.DatabaseDSN)
 	if err != nil {
 		log.Printf("[Open DB] Не удалось установить соединение с базой данных: %q", err)
 	}
@@ -79,12 +79,12 @@ func (d DataBase) AddURL(ctx context.Context, shortURLKey string, originalURL []
 }
 
 func (d DataBase) GetURL(ctx context.Context, shortURLKey string) ([]byte, bool) {
-	ps := config.Config.DatabaseDSN
 
+	log.Print("Вызван метод получения урл")
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
-	db, err := sql.Open("pgx", ps)
+	db, err := sql.Open("pgx", config.Config.DatabaseDSN)
 	if err != nil {
 		log.Printf("[Open DB] Не удалось установить соединение с базой данных: %q", err)
 	}
@@ -102,6 +102,7 @@ func (d DataBase) GetURL(ctx context.Context, shortURLKey string) ([]byte, bool)
 	}
 
 	if originalURL.Valid {
+		log.Printf("Оригинальный УРЛ: %q", originalURL.String)
 		return []byte(originalURL.String), true
 	}
 	return nil, false
