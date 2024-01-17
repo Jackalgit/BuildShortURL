@@ -43,9 +43,9 @@ func ConfigLogger() {
 }
 
 func ConfigFileStorage() {
-	path := "tmp/short-url-db.json"
+	//path := "tmp/short-url-db.json"
 
-	flag.StringVar(&Config.FileStoragePath, "f", path, "Path to FileStorage")
+	flag.StringVar(&Config.FileStoragePath, "f", "", "Path to FileStorage")
 
 	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {
 		Config.FileStoragePath = envFileStoragePath
