@@ -48,7 +48,10 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 	shortURLKey := util.GenerateKey()
 
 	s.Storage.AddURL(s.Ctx, shortURLKey, originalURL)
-	util.SaveURLToJSONFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
+
+	if config.Config.DatabaseDSN == "" {
+		util.SaveURLToJSONFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
+	}
 
 	w.Header().Set("Content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
@@ -101,10 +104,11 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 	shortURLKey := util.GenerateKey()
 	s.Storage.AddURL(s.Ctx, shortURLKey, originalURL)
 
+	if config.Config.DatabaseDSN == "" {
+		util.SaveURLToJSONFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
+	}
+
 	shortURL := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
-
-	util.SaveURLToJSONFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
-
 	respons := models.Response{
 		Result: shortURL,
 	}
