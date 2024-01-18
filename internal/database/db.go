@@ -24,12 +24,11 @@ func NewDataBase(ctx context.Context) DataBase {
 	}
 	defer db.Close()
 
-	_, err = db.ExecContext(ctx,
-		"CREATE TABLE IF NOT EXISTS storage_url(id int primary key, shortURLKey text, originalURL text)")
+	_, err = db.ExecContext(ctx, `CREATE TABLE IF NOT EXISTS storage(shortURLKey VARCHAR (255), originalURL VARCHAR (255))`)
 	if err != nil {
-		log.Printf("[Create DB] Не удалось создать таблицу в база данных: %q", err)
+		log.Printf("[Create Table] Не удалось создать таблицу в база данных: %q", err)
 	}
-	log.Print("Создана таблицы для хранения УРЛ")
+	log.Print("Создана таблица для хранения УРЛ")
 	//rows, err := res.RowsAffected()
 	//if err != nil {
 	//	log.Printf("Ошибка в получении количества строк: %q", err)
@@ -51,6 +50,8 @@ func (d DataBase) AddURL(ctx context.Context, shortURLKey string, originalURL []
 
 	log.Print("Вызван метод добавления урл")
 
+	query := `INSERT INTO storage (shortURLKey, originalURL) VALUES($1, $2)`
+
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
@@ -60,22 +61,21 @@ func (d DataBase) AddURL(ctx context.Context, shortURLKey string, originalURL []
 	}
 	defer db.Close()
 
-	_, err = db.ExecContext(ctx,
-		"INSERT INTO storage_url(shortURLKey, originalURL)"+" VALUES(?,?)", shortURLKey, originalURL)
+	//_, err = db.ExecContext(ctx, query, shortURLKey, originalURL)
+	//if err != nil {
+	//	log.Printf("[Insert into DB] Не удалось сделать запись в базу данных: %q", err)
+	//}
+
+	stmt, err := db.PrepareContext(ctx, query)
+	if err != nil {
+		log.Printf("[PrepareContext] %s", err)
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx, shortURLKey, originalURL)
 	if err != nil {
 		log.Printf("[Insert into DB] Не удалось сделать запись в базу данных: %q", err)
 	}
-	//rows, err := res.RowsAffected()
-	//if err != nil {
-	//	log.Printf("Ошибка в получении количества строк: %q", err)
-	//}
-	//last, err := res.LastInsertId()
-	//if err != nil {
-	//	log.Printf("Ошибка в получении LastInsertId: %q", err)
-	//}
-	//
-	//log.Printf("Количество строк: %d", rows)
-	//log.Printf("LastInsertId: %d", last)
 
 }
 
@@ -93,7 +93,7 @@ func (d DataBase) GetURL(ctx context.Context, shortURLKey string) ([]byte, bool)
 
 	row := db.QueryRowContext(
 		ctx,
-		"SELECT originalURL FROM storage_url WHERE shortURLKey = ?", shortURLKey,
+		"SELECT originalURL FROM storage WHERE shortURLKey = $1", shortURLKey,
 	)
 
 	var originalURL sql.NullString

@@ -54,8 +54,8 @@ func ConfigFileStorage() {
 }
 
 func ConfigDatabaseDSN() {
-	//ps := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-	//	`localhost`, `5432`, `ivan`, `XXXXXXXX`, `shorturl`)
+	//ps := fmt.Sprintf("host=%s port=%s dbname=%s sslmode=disable",
+	//	`localhost`, `5432`, `shorturl`)
 
 	flag.StringVar(&Config.DatabaseDSN, "d", "", "Database source name")
 

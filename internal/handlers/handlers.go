@@ -34,6 +34,7 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
 		return
 	}
+	log.Print("MakeShortURL")
 	originalURL, err := io.ReadAll(r.Body)
 	logger.Log.Info("originalURL при запросе на эндпоинта /", zap.String("url", string(originalURL)))
 
@@ -46,7 +47,6 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 	}
 	shortURLKey := util.GenerateKey()
 
-	log.Print("MakeShortURL")
 	s.Storage.AddURL(s.Ctx, shortURLKey, originalURL)
 
 	if config.Config.DatabaseDSN == "" {
@@ -64,7 +64,7 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Only Get requests are allowed!", http.StatusMethodNotAllowed)
 		return
 	}
-
+	log.Print("GetURL")
 	logger.Log.Info("Передаваемый ключ в пути запроса", zap.String("url", r.URL.Path[1:]))
 
 	shortURLKey := r.URL.Path[1:]
@@ -72,7 +72,7 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Don't shortUrlKey", http.StatusBadRequest)
 		return
 	}
-	log.Print("GetURL")
+
 	originalURL, found := s.Storage.GetURL(s.Ctx, shortURLKey)
 
 	logger.Log.Info("originalURL при GET запросе", zap.String("url", string(originalURL)))
@@ -96,14 +96,12 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not read body", http.StatusBadRequest)
 		return
 	}
-
+	log.Print("APIShortURL")
 	originalURL := []byte(request.URL)
 
 	logger.Log.Info("originalURL при запросе эндпоинта /api/shorten", zap.String("url", string(originalURL)))
 
 	shortURLKey := util.GenerateKey()
-
-	log.Print("APIShortURL")
 
 	s.Storage.AddURL(s.Ctx, shortURLKey, originalURL)
 
@@ -130,9 +128,7 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 
 func (s *ShortURL) PingDB(w http.ResponseWriter, r *http.Request) {
 
-	ps := config.Config.DatabaseDSN
-
-	db, err := sql.Open("pgx", ps)
+	db, err := sql.Open("pgx", config.Config.DatabaseDSN)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
