@@ -9,9 +9,7 @@ import (
 	"time"
 )
 
-type DataBase struct {
-	//Connect *sql.DB
-}
+type DataBase struct{}
 
 func NewDataBase(ctx context.Context) DataBase {
 
@@ -29,21 +27,8 @@ func NewDataBase(ctx context.Context) DataBase {
 		log.Printf("[Create Table] Не удалось создать таблицу в база данных: %q", err)
 	}
 	log.Print("Создана таблица для хранения УРЛ")
-	//rows, err := res.RowsAffected()
-	//if err != nil {
-	//	log.Printf("Ошибка в получении количества строк: %q", err)
-	//}
-	//last, err := res.LastInsertId()
-	//if err != nil {
-	//	log.Printf("Ошибка в получении LastInsertId: %q", err)
-	//}
-	//
-	//log.Printf("Количество строк: %d", rows)
-	//log.Printf("LastInsertId: %d", last)
 
-	return DataBase{
-		//Connect: db,
-	}
+	return DataBase{}
 }
 
 func (d DataBase) AddURL(ctx context.Context, shortURLKey string, originalURL []byte) {
