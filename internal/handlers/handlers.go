@@ -20,7 +20,7 @@ import (
 type Repository interface {
 	AddURL(ctx context.Context, shortURLKey string, originalURL []byte)
 	GetURL(ctx context.Context, shortURLKey string) ([]byte, bool)
-	AddBatchURL(ctx context.Context, batchList *models.BatchList)
+	AddBatchURL(ctx context.Context, batchList []models.BatchURL)
 }
 
 type ShortURL struct {
@@ -151,35 +151,37 @@ func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 
 	requestList, err := util.RequestListJSONToStruct(r.Body)
 	if err != nil {
+		log.Println(err)
 		http.Error(w, "Not read body", http.StatusBadRequest)
 		return
 	}
 	// создаем структуру для ответа хендлера
-	responseList := models.ResponseList{}
+	var responseList []models.ResponseBatch
 	// создаем структуру которую передадим для хранения в память или в базе данных
-	batchList := models.BatchList{}
+	var batchList []models.BatchURL
+	//batchList := models.BatchList{}
 
-	for _, v := range requestList.ListURL {
+	for _, v := range requestList {
 		shortURLKey := util.GenerateKey()
 
 		responseBatch := models.ResponseBatch{
 			Correlation: v.Correlation,
 			ShortURL:    shortURLKey,
 		}
-		responseList.ListURL = append(responseList.ListURL, responseBatch)
+		responseList = append(responseList, responseBatch)
 
 		batchURL := models.BatchURL{
 			Correlation: v.Correlation,
 			ShortURL:    shortURLKey,
 			OriginalURL: v.OriginalURL,
 		}
-		batchList.List = append(batchList.List, batchURL)
+		batchList = append(batchList, batchURL)
 	}
 
-	s.Storage.AddBatchURL(s.Ctx, &batchList)
+	s.Storage.AddBatchURL(s.Ctx, batchList)
 
 	if config.Config.DatabaseDSN == "" {
-		util.SaveListURLToJSONFile(config.Config.FileStoragePath, &batchList)
+		util.SaveListURLToJSONFile(config.Config.FileStoragePath, batchList)
 	}
 
 	responsJSON, err := json.Marshal(responseList)
@@ -188,7 +190,7 @@ func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-type", "text/plain")
+	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(responsJSON)
 

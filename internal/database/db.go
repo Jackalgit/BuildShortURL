@@ -97,7 +97,7 @@ func (d DataBase) GetURL(ctx context.Context, shortURLKey string) ([]byte, bool)
 
 }
 
-func (d DataBase) AddBatchURL(ctx context.Context, batchList *models.BatchList) {
+func (d DataBase) AddBatchURL(ctx context.Context, batchList []models.BatchURL) {
 	log.Print("Вызван метод AddBatchURL")
 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
@@ -123,7 +123,7 @@ func (d DataBase) AddBatchURL(ctx context.Context, batchList *models.BatchList) 
 	}
 	defer stmt.Close()
 
-	for _, v := range batchList.List {
+	for _, v := range batchList {
 		//все изменения записываются в транзакцию
 		_, err = stmt.ExecContext(ctx, v.Correlation, v.ShortURL, v.OriginalURL)
 		if err != nil {

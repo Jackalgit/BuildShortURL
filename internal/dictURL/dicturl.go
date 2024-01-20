@@ -23,8 +23,8 @@ func (d DictURL) GetURL(ctx context.Context, shortURLKey string) ([]byte, bool) 
 
 }
 
-func (d DictURL) AddBatchURL(ctx context.Context, batchList *models.BatchList) {
-	for _, v := range batchList.List {
+func (d DictURL) AddBatchURL(ctx context.Context, batchList []models.BatchURL) {
+	for _, v := range batchList {
 		d[v.ShortURL] = []byte(v.OriginalURL)
 	}
 

@@ -13,17 +13,9 @@ type RequestBatch struct {
 	OriginalURL string `json:"original_url"`
 }
 
-type RequestList struct {
-	ListURL []RequestBatch
-}
-
 type ResponseBatch struct {
 	Correlation string `json:"correlation_id"`
 	ShortURL    string `json:"short_url"`
-}
-
-type ResponseList struct {
-	ListURL []ResponseBatch
 }
 
 //[

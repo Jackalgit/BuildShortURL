@@ -36,7 +36,7 @@ func SaveURLToJSONFile(path string, originalURL string, shortURLKey string) erro
 	return nil
 }
 
-func SaveListURLToJSONFile(path string, batchList *models.BatchList) error {
+func SaveListURLToJSONFile(path string, batchList []models.BatchURL) error {
 
 	if path == "" {
 		return nil
@@ -49,7 +49,7 @@ func SaveListURLToJSONFile(path string, batchList *models.BatchList) error {
 	}
 	defer file.Close()
 
-	data, _ := json.MarshalIndent(&batchList, "", " ")
+	data, _ := json.MarshalIndent(batchList, "", " ")
 	data = append(data, '\n')
 	_, err = file.Write(data)
 	if err != nil {

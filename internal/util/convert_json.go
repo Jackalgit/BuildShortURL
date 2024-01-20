@@ -24,19 +24,25 @@ func RequestJSONToStruct(body io.Reader) (*models.Request, error) {
 
 }
 
-func RequestListJSONToStruct(body io.Reader) (*models.RequestList, error) {
-	var requestList models.RequestList
+func RequestListJSONToStruct(body io.Reader) ([]models.RequestBatch, error) {
 
-	var buf bytes.Buffer
-	_, err := buf.ReadFrom(body)
-	if err != nil {
-		return &requestList, err
-	}
-	// десериализуем JSON в RequestList
-	if err = json.Unmarshal(buf.Bytes(), &requestList); err != nil {
-		return &requestList, err
+	var requestList []models.RequestBatch
+
+	dec := json.NewDecoder(body)
+	if err := dec.Decode(&requestList); err != nil {
+		return requestList, err
 	}
 
-	return &requestList, nil
+	//var buf bytes.Buffer
+	//_, err := buf.ReadFrom(body)
+	//if err != nil {
+	//	return requestList, err
+	//}
+	//// десериализуем JSON в RequestList
+	//if err = json.Unmarshal(buf.Bytes(), &requestList); err != nil {
+	//	return requestList, err
+	//}
+
+	return requestList, nil
 
 }
