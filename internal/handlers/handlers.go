@@ -151,7 +151,6 @@ func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 
 	requestList, err := util.RequestListJSONToStruct(r.Body)
 	if err != nil {
-		log.Println(err)
 		http.Error(w, "Not read body", http.StatusBadRequest)
 		return
 	}

@@ -17,18 +17,3 @@ type ResponseBatch struct {
 	Correlation string `json:"correlation_id"`
 	ShortURL    string `json:"short_url"`
 }
-
-//[
-//{
-//"correlation_id": "<строковый идентификатор>",
-//"original_url": "<URL для сокращения>"
-//},
-//...
-//]
-//[
-//{
-//"correlation_id": "<строковый идентификатор из объекта запроса>",
-//"short_url": "<результирующий сокращённый URL>"
-//},
-//...
-//]

@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -48,11 +49,6 @@ func (d DataBase) AddURL(ctx context.Context, shortURLKey string, originalURL []
 	}
 	defer db.Close()
 
-	//_, err = db.ExecContext(ctx, query, shortURLKey, originalURL)
-	//if err != nil {
-	//	log.Printf("[Insert into DB] Не удалось сделать запись в базу данных: %q", err)
-	//}
-
 	stmt, err := db.PrepareContext(ctx, query)
 	if err != nil {
 		log.Printf("[PrepareContext] %s", err)
@@ -80,7 +76,7 @@ func (d DataBase) GetURL(ctx context.Context, shortURLKey string) ([]byte, bool)
 
 	row := db.QueryRowContext(
 		ctx,
-		"SELECT originalURL FROM storage WHERE shortURLKey = $1", shortURLKey,
+		"SELECT originalURL FROM storage WHERE shortURLKey = $1", fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey),
 	)
 
 	var originalURL sql.NullString
