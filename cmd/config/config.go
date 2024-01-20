@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"os"
 )
 
@@ -54,10 +55,10 @@ func ConfigFileStorage() {
 }
 
 func ConfigDatabaseDSN() {
-	//ps := fmt.Sprintf("host=%s port=%s dbname=%s sslmode=disable",
-	//	`localhost`, `5432`, `shorturl`)
+	ps := fmt.Sprintf("host=%s port=%s dbname=%s sslmode=disable",
+		`localhost`, `5432`, `shorturl`)
 
-	flag.StringVar(&Config.DatabaseDSN, "d", "", "Database source name")
+	flag.StringVar(&Config.DatabaseDSN, "d", ps, "Database source name")
 
 	if envDatabaseDSN := os.Getenv("DATABASE_DSN"); envDatabaseDSN != "" {
 		Config.DatabaseDSN = envDatabaseDSN

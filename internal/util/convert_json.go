@@ -23,3 +23,20 @@ func RequestJSONToStruct(body io.Reader) (*models.Request, error) {
 	return &request, nil
 
 }
+
+func RequestListJSONToStruct(body io.Reader) (*models.RequestList, error) {
+	var requestList models.RequestList
+
+	var buf bytes.Buffer
+	_, err := buf.ReadFrom(body)
+	if err != nil {
+		return &requestList, err
+	}
+	// десериализуем JSON в RequestList
+	if err = json.Unmarshal(buf.Bytes(), &requestList); err != nil {
+		return &requestList, err
+	}
+
+	return &requestList, nil
+
+}

@@ -20,6 +20,7 @@ import (
 type Repository interface {
 	AddURL(ctx context.Context, shortURLKey string, originalURL []byte)
 	GetURL(ctx context.Context, shortURLKey string) ([]byte, bool)
+	AddBatchURL(ctx context.Context, batchList *models.BatchList)
 }
 
 type ShortURL struct {
@@ -97,16 +98,16 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Print("APIShortURL")
-	originalURL := []byte(request.URL)
+	originalURL := request.URL
 
 	logger.Log.Info("originalURL при запросе эндпоинта /api/shorten", zap.String("url", string(originalURL)))
 
 	shortURLKey := util.GenerateKey()
 
-	s.Storage.AddURL(s.Ctx, shortURLKey, originalURL)
+	s.Storage.AddURL(s.Ctx, shortURLKey, []byte(originalURL))
 
 	if config.Config.DatabaseDSN == "" {
-		util.SaveURLToJSONFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
+		util.SaveURLToJSONFile(config.Config.FileStoragePath, originalURL, shortURLKey)
 	}
 
 	shortURL := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
@@ -143,5 +144,52 @@ func (s *ShortURL) PingDB(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+
+}
+
+func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
+
+	requestList, err := util.RequestListJSONToStruct(r.Body)
+	if err != nil {
+		http.Error(w, "Not read body", http.StatusBadRequest)
+		return
+	}
+	// создаем структуру для ответа хендлера
+	responseList := models.ResponseList{}
+	// создаем структуру которую передадим для хранения в память или в базе данных
+	batchList := models.BatchList{}
+
+	for _, v := range requestList.ListURL {
+		shortURLKey := util.GenerateKey()
+
+		responseBatch := models.ResponseBatch{
+			Correlation: v.Correlation,
+			ShortURL:    shortURLKey,
+		}
+		responseList.ListURL = append(responseList.ListURL, responseBatch)
+
+		batchURL := models.BatchURL{
+			Correlation: v.Correlation,
+			ShortURL:    shortURLKey,
+			OriginalURL: v.OriginalURL,
+		}
+		batchList.List = append(batchList.List, batchURL)
+	}
+
+	s.Storage.AddBatchURL(s.Ctx, &batchList)
+
+	if config.Config.DatabaseDSN == "" {
+		util.SaveListURLToJSONFile(config.Config.FileStoragePath, &batchList)
+	}
+
+	responsJSON, err := json.Marshal(responseList)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	w.Write(responsJSON)
 
 }

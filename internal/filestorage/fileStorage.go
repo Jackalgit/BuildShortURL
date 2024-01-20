@@ -48,3 +48,9 @@ func (f FileStorage) AddURL(ctx context.Context, shortURLKey string, originalURL
 func (f FileStorage) GetURL(ctx context.Context, shortURLKey string) ([]byte, bool) {
 	return nil, false
 }
+
+func (f FileStorage) AddBatchURL(
+	ctx context.Context,
+	batchList *models.BatchList) {
+
+}
