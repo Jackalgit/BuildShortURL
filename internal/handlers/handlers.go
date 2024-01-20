@@ -188,7 +188,7 @@ func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-type", "application/json")
+	w.Header().Set("Content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(responsJSON)
 
