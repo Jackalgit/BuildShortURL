@@ -114,9 +114,6 @@ func (d DataBase) AddBatchURL(ctx context.Context, batchList *models.BatchList) 
 	if err != nil {
 		log.Printf("Ошибка начала транзакции: %q", err)
 	}
-	// можно вызвать Rollback в defer,
-	// если Commit будет раньше, то откат проигнорируется
-	//defer tx.Rollback()
 
 	query := `INSERT INTO storage (correlationId, shortURLKey, originalURL) VALUES($1, $2, $3)`
 
