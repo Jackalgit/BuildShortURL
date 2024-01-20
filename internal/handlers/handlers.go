@@ -160,19 +160,18 @@ func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 	// создаем структуру которую передадим для хранения в память или в базе данных
 	var batchList []models.BatchURL
 	//batchList := models.BatchList{}
-
 	for _, v := range requestList {
 		shortURLKey := util.GenerateKey()
 
 		responseBatch := models.ResponseBatch{
 			Correlation: v.Correlation,
-			ShortURL:    shortURLKey,
+			ShortURL:    fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey),
 		}
 		responseList = append(responseList, responseBatch)
 
 		batchURL := models.BatchURL{
 			Correlation: v.Correlation,
-			ShortURL:    shortURLKey,
+			ShortURL:    fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey),
 			OriginalURL: v.OriginalURL,
 		}
 		batchList = append(batchList, batchURL)
