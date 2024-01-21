@@ -20,6 +20,7 @@ import (
 type Repository interface {
 	AddURL(ctx context.Context, shortURLKey string, originalURL []byte) error
 	GetURL(ctx context.Context, shortURLKey string) ([]byte, bool)
+	AddAPIShortURL(ctx context.Context, shortURLKey string, originalURL []byte)
 	AddBatchURL(ctx context.Context, batchList []models.BatchURL) error
 }
 
@@ -111,7 +112,7 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 
 	shortURLKey := util.GenerateKey()
 
-	s.Storage.AddURL(s.Ctx, shortURLKey, []byte(originalURL))
+	s.Storage.AddAPIShortURL(s.Ctx, shortURLKey, []byte(originalURL))
 
 	if config.Config.DatabaseDSN == "" {
 		util.SaveURLToJSONFile(config.Config.FileStoragePath, originalURL, shortURLKey)

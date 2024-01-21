@@ -32,6 +32,14 @@ func (d DictURL) GetURL(ctx context.Context, shortURLKey string) ([]byte, bool) 
 
 }
 
+func (d DictURL) AddAPIShortURL(ctx context.Context, shortURLKey string, originalURL []byte) {
+
+	d[shortURLKey] = originalURL
+
+	return
+
+}
+
 func (d DictURL) AddBatchURL(ctx context.Context, batchList []models.BatchURL) error {
 	for _, v := range batchList {
 		for key, value := range d {
