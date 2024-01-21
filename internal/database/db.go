@@ -36,14 +36,10 @@ func NewDataBase(ctx context.Context) DataBase {
 
 	db.ExecContext(ctx, `CREATE UNIQUE INDEX originalURL_idx ON storage (originalURL)`)
 
-	log.Print("Создана таблица для хранения УРЛ")
-
 	return DataBase{}
 }
 
 func (d DataBase) AddURL(ctx context.Context, shortURLKey string, originalURL []byte) error {
-
-	log.Print("Вызван метод добавления урл")
 
 	query := `INSERT INTO storage (shortURLKey, originalURL) VALUES($1, $2)`
 
@@ -81,7 +77,6 @@ func (d DataBase) AddURL(ctx context.Context, shortURLKey string, originalURL []
 
 func (d DataBase) GetURL(ctx context.Context, shortURLKey string) ([]byte, bool) {
 
-	log.Print("Вызван метод получения урл")
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
@@ -111,7 +106,6 @@ func (d DataBase) GetURL(ctx context.Context, shortURLKey string) ([]byte, bool)
 }
 
 func (d DataBase) AddBatchURL(ctx context.Context, batchList []models.BatchURL) error {
-	log.Print("Вызван метод AddBatchURL")
 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
@@ -122,7 +116,6 @@ func (d DataBase) AddBatchURL(ctx context.Context, batchList []models.BatchURL) 
 	}
 	defer db.Close()
 
-	// начинаем транзакцию
 	tx, err := db.Begin()
 	if err != nil {
 		log.Printf("Ошибка начала транзакции: %q", err)
@@ -137,7 +130,6 @@ func (d DataBase) AddBatchURL(ctx context.Context, batchList []models.BatchURL) 
 	defer stmt.Close()
 
 	for _, v := range batchList {
-		//все изменения записываются в транзакцию
 		_, err = stmt.ExecContext(ctx, v.Correlation, v.ShortURL, v.OriginalURL)
 		if err != nil {
 			var pgErr *pgconn.PgError
@@ -153,12 +145,10 @@ func (d DataBase) AddBatchURL(ctx context.Context, batchList []models.BatchURL) 
 		}
 
 		if err != nil {
-			// если ошибка, то откатываем изменения
 			tx.Rollback()
-			log.Printf("Ошибка вставки в базу: %q", err)
+			log.Printf("Ошибка записи в базу: %q", err)
 		}
 	}
-	// завершаем транзакцию
 	tx.Commit()
 	return nil
 

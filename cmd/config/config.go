@@ -54,6 +54,7 @@ func ConfigFileStorage() {
 }
 
 func ConfigDatabaseDSN() {
+	//подключение базы данных для тестов
 	//ps := fmt.Sprintf("host=%s port=%s dbname=%s sslmode=disable",
 	//	`localhost`, `5432`, `shorturl`)
 
