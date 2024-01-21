@@ -18,9 +18,9 @@ import (
 )
 
 type Repository interface {
-	AddURL(ctx context.Context, shortURLKey string, originalURL []byte)
+	AddURL(ctx context.Context, shortURLKey string, originalURL []byte) error
 	GetURL(ctx context.Context, shortURLKey string) ([]byte, bool)
-	AddBatchURL(ctx context.Context, batchList []models.BatchURL)
+	AddBatchURL(ctx context.Context, batchList []models.BatchURL) error
 }
 
 type ShortURL struct {
@@ -46,9 +46,16 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Body don't url", http.StatusBadRequest)
 		return
 	}
+
 	shortURLKey := util.GenerateKey()
 
-	s.Storage.AddURL(s.Ctx, shortURLKey, originalURL)
+	if err := s.Storage.AddURL(s.Ctx, shortURLKey, originalURL); err != nil {
+		w.Header().Set("Content-type", "text/plain")
+		w.WriteHeader(http.StatusConflict)
+		w.Write([]byte(fmt.Sprint(config.Config.BaseAddress, "/", err.Error())))
+
+		return
+	}
 
 	if config.Config.DatabaseDSN == "" {
 		util.SaveURLToJSONFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
@@ -176,7 +183,13 @@ func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 		batchList = append(batchList, batchURL)
 	}
 
-	s.Storage.AddBatchURL(s.Ctx, batchList)
+	if err := s.Storage.AddBatchURL(s.Ctx, batchList); err != nil {
+		w.Header().Set("Content-type", "text/plain")
+		w.WriteHeader(http.StatusConflict)
+		w.Write([]byte(err.Error()))
+
+		return
+	}
 
 	if config.Config.DatabaseDSN == "" {
 		util.SaveListURLToJSONFile(config.Config.FileStoragePath, batchList)

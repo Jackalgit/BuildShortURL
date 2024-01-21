@@ -17,10 +17,10 @@ func NewFileStorage(path string) FileStorage {
 		Path: path,
 	}
 }
-func (f FileStorage) AddURL(ctx context.Context, shortURLKey string, originalURL []byte) {
+func (f FileStorage) AddURL(ctx context.Context, shortURLKey string, originalURL []byte) error {
 
 	if f.Path == "" {
-		return
+		return nil
 	}
 
 	file, err := os.OpenFile(f.Path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
@@ -43,14 +43,16 @@ func (f FileStorage) AddURL(ctx context.Context, shortURLKey string, originalURL
 
 	}
 
+	return nil
+
 }
 
 func (f FileStorage) GetURL(ctx context.Context, shortURLKey string) ([]byte, bool) {
 	return nil, false
 }
 
-func (f FileStorage) AddBatchURL(
-	ctx context.Context,
-	batchList []models.BatchURL) {
+func (f FileStorage) AddBatchURL(ctx context.Context, batchList []models.BatchURL) error {
+
+	return nil
 
 }

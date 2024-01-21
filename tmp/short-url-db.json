@@ -1,65 +1,37 @@
 
-{
- "original_url": "www.ivan.ru",
- "short_url": "KLuMpuEjjz"
-}
-{
- "original_url": "https://practicum.yandex.ru",
- "short_url": "zkXFgtCEQr"
-}
-{
- "original_url": "www.ivan.ru",
- "short_url": "myOaHFLRVk"
-}
-{
- "original_url": "www.ivan.ru",
- "short_url": "QTDLYCxpje"
-}
-{
- "original_url": "www.ivan.ru",
- "short_url": "TntZwMdSkf"
-}
-{
- "original_url": "www.ivan.ru",
- "short_url": "HpikaPxwLK"
-}
-{
- "original_url": "www.ivan.ru",
- "short_url": "bBxPrrJmJz"
-}
-{
- "original_url": "www.ivan.ru",
- "short_url": "MLXOZohVVw"
-}
-{
- "original_url": "www.ivan.ru",
- "short_url": "RWBvPhflMx"
-}
-{
- "original_url": "www.ivan.ru",
- "short_url": "vmLdimHEHv"
-}
-{
- "original_url": "www.ivan.ru",
- "short_url": "SLnyyRHXpK"
-}
-{
- "original_url": "",
- "short_url": "sFEqtTawXq"
-}
-{
- "original_url": "",
- "short_url": "gtzebtlDYm"
-}
 [
  {
   "correlation_id": "36b7a4d1-ea5c-478d-8110-4dd60015f4b5",
-  "short_url": "QcrBrEaYMV",
+  "short_url": "http://localhost:8080/OHvPGveTQM",
   "original_url": "http://vvrwtxht.yandex/qo8s9/ky2mn2bud"
  },
  {
   "correlation_id": "9e7e4c8c-d0b8-4cab-a10a-2733c1041b2b",
-  "short_url": "stQSXZxPrd",
+  "short_url": "http://localhost:8080/OQVBfYPRRf",
+  "original_url": "http://mpimx8.net"
+ }
+]
+[
+ {
+  "correlation_id": "36b7a4d1-ea5c-478d-8110-4dd60015f4b5",
+  "short_url": "http://localhost:8080/odQjtBKUaz",
+  "original_url": "http://vvrwtxht.yandex/qo8s9/ky2mn2bud"
+ },
+ {
+  "correlation_id": "9e7e4c8c-d0b8-4cab-a10a-2733c1041b2b",
+  "short_url": "http://localhost:8080/jglfyzrjpt",
+  "original_url": "http://mpimx8.net"
+ }
+]
+[
+ {
+  "correlation_id": "36b7a4d1-ea5c-478d-8110-4dd60015f4b5",
+  "short_url": "http://localhost:8080/WhPmjOpmiz",
+  "original_url": "http://vvrwtxht.yandex/qo8s9/ky2mn2bud"
+ },
+ {
+  "correlation_id": "9e7e4c8c-d0b8-4cab-a10a-2733c1041b2b",
+  "short_url": "http://localhost:8080/xrJgfTyQYP",
   "original_url": "http://mpimx8.net"
  }
 ]

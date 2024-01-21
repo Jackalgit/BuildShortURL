@@ -11,8 +11,17 @@ func NewDictURL() DictURL {
 	return make(DictURL)
 }
 
-func (d DictURL) AddURL(ctx context.Context, shortURLKey string, originalURL []byte) {
+func (d DictURL) AddURL(ctx context.Context, shortURLKey string, originalURL []byte) error {
+	for key, value := range d {
+		if string(value) == string(originalURL) {
+			AddURLError := models.NewAddURLError(key)
+
+			return AddURLError
+		}
+	}
+
 	d[shortURLKey] = originalURL
+	return nil
 
 }
 
@@ -23,9 +32,18 @@ func (d DictURL) GetURL(ctx context.Context, shortURLKey string) ([]byte, bool) 
 
 }
 
-func (d DictURL) AddBatchURL(ctx context.Context, batchList []models.BatchURL) {
+func (d DictURL) AddBatchURL(ctx context.Context, batchList []models.BatchURL) error {
 	for _, v := range batchList {
+		for key, value := range d {
+			if string(value) == v.OriginalURL {
+				AddURLError := models.NewAddURLError(key)
+
+				return AddURLError
+			}
+		}
+
 		d[v.ShortURL] = []byte(v.OriginalURL)
 	}
+	return nil
 
 }

@@ -17,7 +17,7 @@ func RequestJSONToStruct(body io.Reader) (*models.Request, error) {
 	}
 	// десериализуем JSON в Request
 	if err = json.Unmarshal(buf.Bytes(), &request); err != nil {
-		return &request, err
+		return nil, err
 	}
 
 	return &request, nil
@@ -30,18 +30,8 @@ func RequestListJSONToStruct(body io.Reader) ([]models.RequestBatch, error) {
 
 	dec := json.NewDecoder(body)
 	if err := dec.Decode(&requestList); err != nil {
-		return requestList, err
+		return nil, err
 	}
-
-	//var buf bytes.Buffer
-	//_, err := buf.ReadFrom(body)
-	//if err != nil {
-	//	return requestList, err
-	//}
-	//// десериализуем JSON в RequestList
-	//if err = json.Unmarshal(buf.Bytes(), &requestList); err != nil {
-	//	return requestList, err
-	//}
 
 	return requestList, nil
 

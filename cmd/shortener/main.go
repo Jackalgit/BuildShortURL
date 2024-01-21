@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	"github.com/Jackalgit/BuildShortURL/internal/initialization"
 	"github.com/Jackalgit/BuildShortURL/internal/logger"
@@ -59,6 +60,11 @@ func runServer(ctx context.Context) error {
 	router.HandleFunc("/api/shorten/batch", storage.Batch).Methods("POST")
 
 	router.Use(logger.LoggingMiddleware, zip.GzipMiddleware)
+
+	if err := http.ListenAndServe(config.Config.ServerPort, router); err != nil {
+		return fmt.Errorf("[ListenAndServe] запустить сервер: %q", err)
+
+	}
 
 	return http.ListenAndServe(config.Config.ServerPort, router)
 
