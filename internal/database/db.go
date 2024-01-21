@@ -110,33 +110,6 @@ func (d DataBase) GetURL(ctx context.Context, shortURLKey string) ([]byte, bool)
 
 }
 
-func (d DataBase) AddAPIShortURL(ctx context.Context, shortURLKey string, originalURL []byte) {
-	query := `INSERT INTO storage (shortURLKey, originalURL) VALUES($1, $2)`
-
-	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
-	defer cancel()
-
-	db, err := sql.Open("pgx", config.Config.DatabaseDSN)
-	if err != nil {
-		log.Printf("[Open DB] Не удалось установить соединение с базой данных: %q", err)
-	}
-	defer db.Close()
-
-	stmt, err := db.PrepareContext(ctx, query)
-	if err != nil {
-		log.Printf("[PrepareContext] %s", err)
-	}
-	defer stmt.Close()
-
-	_, err = stmt.ExecContext(ctx, shortURLKey, originalURL)
-	if err != nil {
-		log.Printf("[ExecContext]: %q", err)
-	}
-
-	return
-
-}
-
 func (d DataBase) AddBatchURL(ctx context.Context, batchList []models.BatchURL) error {
 	log.Print("Вызван метод AddBatchURL")
 
