@@ -112,9 +112,18 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 	shortURLKey := util.GenerateKey()
 
 	if err := s.Storage.AddURL(s.Ctx, shortURLKey, []byte(originalURL)); err != nil {
-		w.Header().Set("Content-type", "text/plain")
+		respons := models.Response{
+			Result: err.Error(),
+		}
+		responsJSON, err := json.Marshal(respons)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-type", "application/json")
 		w.WriteHeader(http.StatusConflict)
-		w.Write([]byte(fmt.Sprint(config.Config.BaseAddress, "/", err.Error())))
+		w.Write(responsJSON)
 
 		return
 	}
