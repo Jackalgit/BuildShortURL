@@ -34,7 +34,7 @@ func NewDataBase(ctx context.Context) DataBase {
 		log.Printf("[Create Table] Не удалось создать таблицу в база данных: %q", err)
 	}
 
-	//db.ExecContext(ctx, `CREATE UNIQUE INDEX originalURL_idx ON storage (originalURL)`)
+	db.ExecContext(ctx, `CREATE UNIQUE INDEX originalURL_idx ON storage (originalURL)`)
 
 	log.Print("Создана таблица для хранения УРЛ")
 
@@ -45,7 +45,7 @@ func (d DataBase) AddURL(ctx context.Context, shortURLKey string, originalURL []
 
 	log.Print("Вызван метод добавления урл")
 
-	query := `INSERT INTO storage (shortURLKey, originalURL) VALUES($1, $2) ON CONFLICT (originalURL)`
+	query := `INSERT INTO storage (shortURLKey, originalURL) VALUES($1, $2)`
 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
@@ -128,7 +128,7 @@ func (d DataBase) AddBatchURL(ctx context.Context, batchList []models.BatchURL) 
 		log.Printf("Ошибка начала транзакции: %q", err)
 	}
 
-	query := `INSERT INTO storage (correlationId, shortURLKey, originalURL) VALUES($1, $2, $3) ON CONFLICT (originalURL)`
+	query := `INSERT INTO storage (correlationId, shortURLKey, originalURL) VALUES($1, $2, $3)`
 
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
