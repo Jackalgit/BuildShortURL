@@ -34,7 +34,7 @@ func NewDataBase(ctx context.Context) DataBase {
 		log.Printf("[Create Table] Не удалось создать таблицу в база данных: %q", err)
 	}
 
-	db.ExecContext(ctx, `CREATE UNIQUE INDEX originalURL_idx ON storage (originalURL)`)
+	//db.ExecContext(ctx, `CREATE UNIQUE INDEX originalURL_idx ON storage (originalURL)`)
 
 	log.Print("Создана таблица для хранения УРЛ")
 
