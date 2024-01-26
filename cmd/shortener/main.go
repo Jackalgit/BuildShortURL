@@ -23,6 +23,7 @@ func init() {
 }
 
 func main() {
+	//зависают тесты на первом инкременте
 	//stop := make(chan os.Signal, 1)
 	//signal.Notify(stop, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	ctx := context.Background()
