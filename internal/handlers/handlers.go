@@ -56,10 +56,6 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//if config.Config.DatabaseDSN == "" {
-	//	util.SaveURLToJSONFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
-	//}
-
 	w.Header().Set("Content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)))
@@ -124,10 +120,6 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-
-	//if config.Config.DatabaseDSN == "" {
-	//	util.SaveURLToJSONFile(config.Config.FileStoragePath, originalURL, shortURLKey)
-	//}
 
 	shortURL := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
 	respons := models.Response{
@@ -202,10 +194,6 @@ func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-
-	//if config.Config.DatabaseDSN == "" {
-	//	util.SaveListURLToJSONFile(config.Config.FileStoragePath, batchList)
-	//}
 
 	responsJSON, err := json.Marshal(responseList)
 	if err != nil {
