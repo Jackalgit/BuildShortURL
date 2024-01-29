@@ -2,7 +2,9 @@ package dicturl
 
 import (
 	"context"
+	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
+	"github.com/Jackalgit/BuildShortURL/internal/util"
 )
 
 type DictURL map[string][]byte
@@ -21,6 +23,9 @@ func (d DictURL) AddURL(ctx context.Context, shortURLKey string, originalURL []b
 	}
 
 	d[shortURLKey] = originalURL
+
+	util.SaveURLToJSONFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
+
 	return nil
 
 }
@@ -44,6 +49,9 @@ func (d DictURL) AddBatchURL(ctx context.Context, batchList []models.BatchURL) e
 
 		d[v.ShortURL] = []byte(v.OriginalURL)
 	}
+	
+	util.SaveListURLToJSONFile(config.Config.FileStoragePath, batchList)
+
 	return nil
 
 }

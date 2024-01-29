@@ -56,9 +56,9 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if config.Config.DatabaseDSN == "" {
-		util.SaveURLToJSONFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
-	}
+	//if config.Config.DatabaseDSN == "" {
+	//	util.SaveURLToJSONFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
+	//}
 
 	w.Header().Set("Content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
@@ -125,9 +125,9 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if config.Config.DatabaseDSN == "" {
-		util.SaveURLToJSONFile(config.Config.FileStoragePath, originalURL, shortURLKey)
-	}
+	//if config.Config.DatabaseDSN == "" {
+	//	util.SaveURLToJSONFile(config.Config.FileStoragePath, originalURL, shortURLKey)
+	//}
 
 	shortURL := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
 	respons := models.Response{
@@ -177,7 +177,7 @@ func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 	var responseList []models.ResponseBatch
 	// создаем структуру которую передадим для хранения в память или в базе данных
 	var batchList []models.BatchURL
-	//batchList := models.BatchList{}
+
 	for _, v := range requestList {
 		shortURLKey := util.GenerateKey()
 
@@ -203,9 +203,9 @@ func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if config.Config.DatabaseDSN == "" {
-		util.SaveListURLToJSONFile(config.Config.FileStoragePath, batchList)
-	}
+	//if config.Config.DatabaseDSN == "" {
+	//	util.SaveListURLToJSONFile(config.Config.FileStoragePath, batchList)
+	//}
 
 	responsJSON, err := json.Marshal(responseList)
 	if err != nil {
