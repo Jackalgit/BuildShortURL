@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/google/uuid"
@@ -87,7 +86,7 @@ func (d DataBase) GetURL(ctx context.Context, userID uuid.UUID, shortURLKey stri
 		ctx,
 		//"SELECT originalURL FROM storage WHERE userID = $1 AND shortURLKey = $2",
 		"SELECT originalURL FROM storage WHERE shortURLKey = $1",
-		fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey),
+		shortURLKey,
 	)
 
 	var originalURL sql.NullString
