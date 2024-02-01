@@ -48,7 +48,7 @@ func GetUserID(tokenString string) (uuid.UUID, error) {
 	}
 
 	if !token.Valid {
-		return claims.UserID, fmt.Errorf("Token is not valid %v", token.Valid)
+		return claims.UserID, fmt.Errorf("token is not valid %v", token.Valid)
 	}
 
 	// возвращаем ID пользователя в читаемом виде
