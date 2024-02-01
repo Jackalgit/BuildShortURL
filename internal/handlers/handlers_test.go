@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	dicturl "github.com/Jackalgit/BuildShortURL/internal/dictURL"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/Jackalgit/BuildShortURL/internal/util"
@@ -24,7 +23,7 @@ func TestShortURL_GetURL(t *testing.T) {
 	dictURL := dicturl.NewDictURL()
 	userID := uuid.New()
 
-	dictURL.AddURL(ctx, userID, "/qweQWErtyQ", []byte("long long long url"))
+	dictURL.AddURL(ctx, userID, "qweQWErtyQ", []byte("long long long url"))
 
 	s := ShortURL{Ctx: ctx, Storage: dictURL}
 
@@ -123,8 +122,8 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 			err = result.Body.Close()
 			require.NoError(t, err)
 
-			shortURLKeyFull := fmt.Sprint(config.Config.BaseAddress, string(bodyResult))
-			originalURL, _ := s.Storage.GetURL(ctx, userID, shortURLKeyFull)
+			//shortURLKeyFull := fmt.Sprint(config.Config.BaseAddress, string(bodyResult))
+			originalURL, _ := s.Storage.GetURL(ctx, userID, string(bodyResult)[1:])
 			assert.Equal(t, tc.Body, string(originalURL))
 
 		})
@@ -198,7 +197,7 @@ func TestShortURL_JSONShortURL(t *testing.T) {
 				// десериализуем resp.Body json в go model Response
 				json.Unmarshal(resp.Body(), &respons)
 
-				originalURL, _ := s.Storage.GetURL(ctx, userID, respons.Result)
+				originalURL, _ := s.Storage.GetURL(ctx, userID, respons.Result[1:])
 				assert.Equal(t, tc.expectedBody, string(originalURL))
 			}
 		})
