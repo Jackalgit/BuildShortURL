@@ -2,6 +2,7 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
@@ -82,7 +83,7 @@ func ConfigSecretKey() {
 	if err := envconfig.Process("", &secret); err != nil {
 		log.Println("[SECRET_KEY]: ", err)
 	}
-
+	fmt.Println(secret)
 	Config.SecretKey = secret.SecretKey
 
 }
