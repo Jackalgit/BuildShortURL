@@ -2,6 +2,7 @@ package dicturl
 
 import (
 	"context"
+	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/Jackalgit/BuildShortURL/internal/util"
@@ -97,7 +98,7 @@ func (d DictURL) UserURLList(ctx context.Context, userID uuid.UUID) ([]models.Re
 	for k, v := range userDictURL {
 
 		responseUserURL := models.ResponseUserURL{
-			ShortURL:    k,
+			ShortURL:    fmt.Sprint(config.Config.BaseAddress, "/", k),
 			OriginalURL: string(v),
 		}
 
