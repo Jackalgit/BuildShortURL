@@ -83,8 +83,8 @@ func (d DataBase) GetURL(ctx context.Context, userID uuid.UUID, shortURLKey stri
 
 	row := d.conn.QueryRowContext(
 		ctx,
-		"SELECT originalURL FROM storage WHERE userID = $1 AND shortURLKey = $2",
-		userID,
+		//"SELECT originalURL FROM storage WHERE userID = $1 AND shortURLKey = $2",
+		"SELECT originalURL FROM storage WHERE shortURLKey = $1",
 		fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey),
 	)
 
