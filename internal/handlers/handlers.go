@@ -275,17 +275,16 @@ func (s *ShortURL) TokenMiddleware(next http.Handler) http.Handler {
 		cookie, err := r.Cookie("token")
 		// если токена нет, то генерируем его и возвращаем клиенту
 		if err == http.ErrNoCookie {
-			s.SetCookie(w)
+			s.SetCookie(w, r)
 			next.ServeHTTP(w, r)
 			return
 		}
-
 		// добываем значение токена, а из него userId.
 		// если токен не валидный, то генерируем новый токен и возвращаем его клиенту
 		cookieStr := cookie.Value
 		userID, err := util.GetUserID(cookieStr)
 		if err != nil {
-			s.SetCookie(w)
+			s.SetCookie(w, r)
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -296,7 +295,7 @@ func (s *ShortURL) TokenMiddleware(next http.Handler) http.Handler {
 		}
 		// если токен валидный, но userId нет в DictUserId, то генерируем токен и возвращаем его клиенту
 		if _, ok := s.DictUserIDToken[userID]; !ok {
-			s.SetCookie(w)
+			s.SetCookie(w, r)
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -307,14 +306,14 @@ func (s *ShortURL) TokenMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(tokenFn)
 }
 
-func (s *ShortURL) SetCookie(w http.ResponseWriter) {
+func (s *ShortURL) SetCookie(w http.ResponseWriter, r *http.Request) {
 	id := uuid.New()
 
 	tokenString := util.BuildJWTString(id)
-
 	s.DictUserIDToken.AddUserID(id, tokenString)
 
 	cookie := http.Cookie{Name: "token", Value: tokenString}
+	r.AddCookie(&cookie)
 	http.SetCookie(w, &cookie)
 }
 
