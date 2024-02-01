@@ -29,7 +29,7 @@ type Repository interface {
 type ShortURL struct {
 	Ctx             context.Context
 	Storage         Repository
-	DictUserIdToken userID.DictUserIdToken
+	DictUserIDToken userID.DictUserIDToken
 }
 
 func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
@@ -45,11 +45,11 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 		log.Println("[MakeShortURL] No Cookie:", err)
 	}
 	cookieStr := cookie.Value
-	userId, err := util.GetUserID(cookieStr)
+	userID, err := util.GetUserID(cookieStr)
 	if err != nil {
 		log.Println("[MakeShortURL] Token is not valid", err)
 	}
-	if userId.String() == "" {
+	if userID.String() == "" {
 		http.Error(w, "No User ID in token", http.StatusUnauthorized)
 		return
 	}
@@ -67,7 +67,7 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 
 	shortURLKey := util.GenerateKey()
 
-	if err := s.Storage.AddURL(s.Ctx, userId, shortURLKey, originalURL); err != nil {
+	if err := s.Storage.AddURL(s.Ctx, userID, shortURLKey, originalURL); err != nil {
 		w.Header().Set("Content-type", "text/plain")
 		w.WriteHeader(http.StatusConflict)
 		w.Write([]byte(fmt.Sprint(config.Config.BaseAddress, "/", err.Error())))
@@ -92,11 +92,11 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 		log.Println("[GetURL] No Cookie:", err)
 	}
 	cookieStr := cookie.Value
-	userId, err := util.GetUserID(cookieStr)
+	userID, err := util.GetUserID(cookieStr)
 	if err != nil {
 		log.Println("[GetURL] Token is not valid", err)
 	}
-	if userId.String() == "" {
+	if userID.String() == "" {
 		http.Error(w, "No User ID in token", http.StatusUnauthorized)
 		return
 	}
@@ -109,7 +109,7 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	originalURL, found := s.Storage.GetURL(s.Ctx, userId, shortURLKey)
+	originalURL, found := s.Storage.GetURL(s.Ctx, userID, shortURLKey)
 
 	logger.Log.Info("originalURL при GET запросе", zap.String("url", string(originalURL)))
 	if !found {
@@ -132,11 +132,11 @@ func (s *ShortURL) JSONShortURL(w http.ResponseWriter, r *http.Request) {
 		log.Println("[JSONShortURL] No Cookie:", err)
 	}
 	cookieStr := cookie.Value
-	userId, err := util.GetUserID(cookieStr)
+	userID, err := util.GetUserID(cookieStr)
 	if err != nil {
 		log.Println("[JSONShortURL] Token is not valid", err)
 	}
-	if userId.String() == "" {
+	if userID.String() == "" {
 		http.Error(w, "No User ID in token", http.StatusUnauthorized)
 		return
 	}
@@ -152,7 +152,7 @@ func (s *ShortURL) JSONShortURL(w http.ResponseWriter, r *http.Request) {
 
 	shortURLKey := util.GenerateKey()
 
-	if err := s.Storage.AddURL(s.Ctx, userId, shortURLKey, []byte(originalURL)); err != nil {
+	if err := s.Storage.AddURL(s.Ctx, userID, shortURLKey, []byte(originalURL)); err != nil {
 		respons := models.Response{
 			Result: err.Error(),
 		}
@@ -283,19 +283,19 @@ func (s *ShortURL) TokenMiddleware(next http.Handler) http.Handler {
 		// добываем значение токена, а из него userId.
 		// если токен не валидный, то генерируем новый токен и возвращаем его клиенту
 		cookieStr := cookie.Value
-		userId, err := util.GetUserID(cookieStr)
+		userID, err := util.GetUserID(cookieStr)
 		if err != nil {
 			s.SetCookie(w)
 			next.ServeHTTP(w, r)
 			return
 		}
 		// если в токене нет userId, то возвращаем ошибку авторизации
-		if userId.String() == "" {
+		if userID.String() == "" {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
 		// если токен валидный, но userId нет в DictUserId, то генерируем токен и возвращаем его клиенту
-		if _, ok := s.DictUserIdToken[userId]; !ok {
+		if _, ok := s.DictUserIDToken[userID]; !ok {
 			s.SetCookie(w)
 			next.ServeHTTP(w, r)
 			return
@@ -312,7 +312,7 @@ func (s *ShortURL) SetCookie(w http.ResponseWriter) {
 
 	tokenString := util.BuildJWTString(id)
 
-	s.DictUserIdToken.AddUserId(id, tokenString)
+	s.DictUserIDToken.AddUserID(id, tokenString)
 
 	cookie := http.Cookie{Name: "token", Value: tokenString}
 	http.SetCookie(w, &cookie)
@@ -324,16 +324,16 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 		log.Println("[UserDictURL] No Cookie:", err)
 	}
 	cookieStr := cookie.Value
-	userId, err := util.GetUserID(cookieStr)
+	userID, err := util.GetUserID(cookieStr)
 	if err != nil {
 		log.Println("[UserDictURL] Token is not valid", err)
 	}
-	if userId.String() == "" {
+	if userID.String() == "" {
 		http.Error(w, "No User ID in token", http.StatusUnauthorized)
 		return
 	}
 
-	userURLList, foundDictUser := s.Storage.UserURLList(s.Ctx, userId)
+	userURLList, foundDictUser := s.Storage.UserURLList(s.Ctx, userID)
 	if !foundDictUser {
 		w.WriteHeader(http.StatusNoContent)
 		return

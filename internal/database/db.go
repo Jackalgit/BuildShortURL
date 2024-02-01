@@ -46,7 +46,7 @@ func NewDataBase(ctx context.Context) DataBase {
 	return DataBase{conn: db}
 }
 
-func (d DataBase) AddURL(ctx context.Context, userId uuid.UUID, shortURLKey string, originalURL []byte) error {
+func (d DataBase) AddURL(ctx context.Context, userID uuid.UUID, shortURLKey string, originalURL []byte) error {
 
 	query := `INSERT INTO storage (userId, shortURLKey, originalURL) VALUES($1, $2, $3)`
 
@@ -59,7 +59,7 @@ func (d DataBase) AddURL(ctx context.Context, userId uuid.UUID, shortURLKey stri
 	}
 	defer stmt.Close()
 
-	_, err = stmt.ExecContext(ctx, userId, shortURLKey, originalURL)
+	_, err = stmt.ExecContext(ctx, userID, shortURLKey, originalURL)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
@@ -76,7 +76,7 @@ func (d DataBase) AddURL(ctx context.Context, userId uuid.UUID, shortURLKey stri
 
 }
 
-func (d DataBase) GetURL(ctx context.Context, userId uuid.UUID, shortURLKey string) ([]byte, bool) {
+func (d DataBase) GetURL(ctx context.Context, userID uuid.UUID, shortURLKey string) ([]byte, bool) {
 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
@@ -84,7 +84,7 @@ func (d DataBase) GetURL(ctx context.Context, userId uuid.UUID, shortURLKey stri
 	row := d.conn.QueryRowContext(
 		ctx,
 		"SELECT originalURL FROM storage WHERE userId = $1 AND shortURLKey = $2",
-		userId,
+		userID,
 		fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey),
 	)
 
@@ -169,14 +169,14 @@ func (d DataBase) GetShortURLinDB(ctx context.Context, originalURL []byte) strin
 
 }
 
-func (d DataBase) UserURLList(ctx context.Context, userId uuid.UUID) ([]models.ResponseUserURL, bool) {
+func (d DataBase) UserURLList(ctx context.Context, userID uuid.UUID) ([]models.ResponseUserURL, bool) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
 	rows, err := d.conn.QueryContext(
 		ctx,
 		"SELECT shortURLKey, originalURL FROM storage WHERE userId = $1",
-		userId,
+		userID,
 	)
 	if err != nil {
 		log.Printf("[QueryContext] Не удалось получить данные по userId: %q", err)

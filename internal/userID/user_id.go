@@ -4,13 +4,13 @@ import (
 	"github.com/google/uuid"
 )
 
-type DictUserIdToken map[uuid.UUID]string
+type DictUserIDToken map[uuid.UUID]string
 
-func NewDictUserIdToken() DictUserIdToken {
-	return make(DictUserIdToken)
+func NewDictUserIDToken() DictUserIDToken {
+	return make(DictUserIDToken)
 }
 
-func (d DictUserIdToken) AddUserId(id uuid.UUID, tokenString string) {
+func (d DictUserIDToken) AddUserID(id uuid.UUID, tokenString string) {
 
 	d[id] = tokenString
 

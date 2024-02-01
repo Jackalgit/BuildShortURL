@@ -15,7 +15,7 @@ var Config struct {
 	LogLevel        string
 	FileStoragePath string
 	DatabaseDSN     string
-	SECRET_KEY      string
+	SecretKey       string
 }
 
 func ConfigServerPort() {
@@ -83,6 +83,6 @@ func ConfigSecretKey() {
 		log.Println("[SECRET_KEY]: ", err)
 	}
 
-	Config.SECRET_KEY = secret.SECRET_KEY
+	Config.SecretKey = secret.Secret_key
 
 }

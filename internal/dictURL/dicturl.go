@@ -14,12 +14,12 @@ func NewDictURL() DictURL {
 	return make(DictURL)
 }
 
-func (d DictURL) AddURL(ctx context.Context, userId uuid.UUID, shortURLKey string, originalURL []byte) error {
+func (d DictURL) AddURL(ctx context.Context, userID uuid.UUID, shortURLKey string, originalURL []byte) error {
 
-	userDictURL, foundDictUser := d[userId]
+	userDictURL, foundDictUser := d[userID]
 	if !foundDictUser {
-		d[userId] = make(map[string][]byte)
-		d[userId][shortURLKey] = originalURL
+		d[userID] = make(map[string][]byte)
+		d[userID][shortURLKey] = originalURL
 	} else {
 		for key, value := range userDictURL {
 			if string(value) == string(originalURL) {
@@ -37,9 +37,9 @@ func (d DictURL) AddURL(ctx context.Context, userId uuid.UUID, shortURLKey strin
 
 }
 
-func (d DictURL) GetURL(ctx context.Context, userId uuid.UUID, shortURLKey string) ([]byte, bool) {
+func (d DictURL) GetURL(ctx context.Context, userID uuid.UUID, shortURLKey string) ([]byte, bool) {
 
-	userDictURL, foundDictUser := d[userId]
+	userDictURL, foundDictUser := d[userID]
 	if !foundDictUser {
 		return nil, foundDictUser
 	}
@@ -50,13 +50,13 @@ func (d DictURL) GetURL(ctx context.Context, userId uuid.UUID, shortURLKey strin
 
 }
 
-func (d DictURL) AddBatchURL(ctx context.Context, userId uuid.UUID, batchList []models.BatchURL) error {
+func (d DictURL) AddBatchURL(ctx context.Context, userID uuid.UUID, batchList []models.BatchURL) error {
 
-	userDictURL, foundDictUser := d[userId]
+	userDictURL, foundDictUser := d[userID]
 	if !foundDictUser {
 		for _, v := range batchList {
-			d[userId] = make(map[string][]byte)
-			d[userId][v.ShortURL] = []byte(v.OriginalURL)
+			d[userID] = make(map[string][]byte)
+			d[userID][v.ShortURL] = []byte(v.OriginalURL)
 		}
 	} else {
 		for _, v := range batchList {
@@ -77,9 +77,9 @@ func (d DictURL) AddBatchURL(ctx context.Context, userId uuid.UUID, batchList []
 
 }
 
-func (d DictURL) UserURLList(ctx context.Context, userId uuid.UUID) ([]models.ResponseUserURL, bool) {
+func (d DictURL) UserURLList(ctx context.Context, userID uuid.UUID) ([]models.ResponseUserURL, bool) {
 
-	userDictURL, foundDictUser := d[userId]
+	userDictURL, foundDictUser := d[userID]
 	if !foundDictUser {
 		return nil, foundDictUser
 	}

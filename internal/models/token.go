@@ -11,5 +11,5 @@ type Claims struct {
 }
 
 type Secret struct {
-	SECRET_KEY string `envconfig:"SECRET_KEY" required:"true"`
+	Secret_key string `envconfig:"Secret_key" required:"true"`
 }

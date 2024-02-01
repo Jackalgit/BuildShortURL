@@ -22,7 +22,7 @@ func BuildJWTString(id uuid.UUID) string {
 		UserID: id,
 	})
 	// создаём строку токена
-	tokenString, err := token.SignedString([]byte(config.Config.SECRET_KEY))
+	tokenString, err := token.SignedString([]byte(config.Config.SecretKey))
 	if err != nil {
 		log.Printf("[SignedString] %q", err)
 	}
@@ -41,7 +41,7 @@ func GetUserID(tokenString string) (uuid.UUID, error) {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
 			}
-			return []byte(config.Config.SECRET_KEY), nil
+			return []byte(config.Config.SecretKey), nil
 		})
 	if err != nil {
 		log.Printf("[ParseWithClaims] %q", err)
