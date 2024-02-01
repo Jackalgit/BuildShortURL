@@ -334,7 +334,7 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 
 	userURLList, foundDictUser := s.Storage.UserURLList(s.Ctx, userID)
 	if !foundDictUser {
-		w.WriteHeader(http.StatusNoContent)
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
