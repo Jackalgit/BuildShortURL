@@ -54,9 +54,7 @@ func TestShortURL_GetURL(t *testing.T) {
 			s.GetURL(w, r)
 
 			result := w.Result()
-			fmt.Println(tc.statusCode)
-			fmt.Println(w.Code)
-			fmt.Println(result)
+
 			require.Equal(t, tc.statusCode, w.Code, "The response code does not match what is expected")
 			assert.Equal(t, tc.Location, result.Header.Get("Location"))
 			err := result.Body.Close()
@@ -122,7 +120,6 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 			err = result.Body.Close()
 			require.NoError(t, err)
 
-			//originalURL, _ := s.Storage.GetURL(ctx, userID, string(bodyResult)[1:])
 			originalURL, _ := s.Storage.GetURL(ctx, userID, string(bodyResult))
 			assert.Equal(t, tc.Body, string(originalURL))
 
@@ -189,15 +186,13 @@ func TestShortURL_JSONShortURL(t *testing.T) {
 			assert.NoError(t, err, "error making HTTP request")
 
 			assert.Equal(t, tc.statusCode, resp.StatusCode(), "Response code didn't match expected")
-			//fmt.Println(s.Storage)
-			//fmt.Println(string(resp.Body()))
+
 			// проверяем, что сохранилось в dictURL
 			if tc.expectedBody != "" {
 				var respons models.Response
 				// десериализуем resp.Body json в go model Response
 				json.Unmarshal(resp.Body(), &respons)
 
-				//originalURL, _ := s.Storage.GetURL(ctx, userID, respons.Result[1:])
 				fmt.Println(respons.Result)
 				originalURL, _ := s.Storage.GetURL(ctx, userID, respons.Result)
 

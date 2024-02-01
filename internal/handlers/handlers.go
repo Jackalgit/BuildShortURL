@@ -78,7 +78,7 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)))
+	w.Write([]byte(shortURLKeyFull))
 
 }
 
@@ -174,9 +174,8 @@ func (s *ShortURL) JSONShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortURL := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
 	respons := models.Response{
-		Result: shortURL,
+		Result: shortURLKeyFull,
 	}
 
 	responsJSON, err := json.Marshal(respons)

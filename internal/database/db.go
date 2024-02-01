@@ -58,8 +58,6 @@ func (d DataBase) AddURL(ctx context.Context, userID uuid.UUID, shortURLKey stri
 	}
 	defer stmt.Close()
 
-	//shortURLKeyFull := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
-
 	_, err = stmt.ExecContext(ctx, userID, shortURLKey, originalURL)
 	if err != nil {
 		var pgErr *pgconn.PgError
@@ -84,7 +82,6 @@ func (d DataBase) GetURL(ctx context.Context, userID uuid.UUID, shortURLKey stri
 
 	row := d.conn.QueryRowContext(
 		ctx,
-		//"SELECT originalURL FROM storage WHERE userID = $1 AND shortURLKey = $2",
 		"SELECT originalURL FROM storage WHERE shortURLKey = $1",
 		shortURLKey,
 	)
