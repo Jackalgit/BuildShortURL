@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	dicturl "github.com/Jackalgit/BuildShortURL/internal/dictURL"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/Jackalgit/BuildShortURL/internal/util"
@@ -23,7 +24,7 @@ func TestShortURL_GetURL(t *testing.T) {
 	dictURL := dicturl.NewDictURL()
 	userID := uuid.New()
 
-	dictURL.AddURL(ctx, userID, "qweQWErtyQ", []byte("long long long url"))
+	dictURL.AddURL(ctx, userID, "/qweQWErtyQ", []byte("long long long url"))
 
 	s := ShortURL{Ctx: ctx, Storage: dictURL}
 
@@ -93,7 +94,6 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 			Body:        "long long long url",
 			statusCode:  http.StatusCreated,
 			contentType: "text/plain",
-			shortURL:    "http://localhost",
 		},
 	}
 
@@ -123,7 +123,8 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 			err = result.Body.Close()
 			require.NoError(t, err)
 
-			originalURL, _ := s.Storage.GetURL(ctx, userID, string(bodyResult)[1:])
+			shortURLKeyFull := fmt.Sprint(config.Config.BaseAddress, string(bodyResult))
+			originalURL, _ := s.Storage.GetURL(ctx, userID, shortURLKeyFull)
 			assert.Equal(t, tc.Body, string(originalURL))
 
 		})
@@ -189,15 +190,15 @@ func TestShortURL_JSONShortURL(t *testing.T) {
 			assert.NoError(t, err, "error making HTTP request")
 
 			assert.Equal(t, tc.statusCode, resp.StatusCode(), "Response code didn't match expected")
-			fmt.Println(s.Storage)
-			fmt.Println(string(resp.Body()))
+			//fmt.Println(s.Storage)
+			//fmt.Println(string(resp.Body()))
 			// проверяем, что сохранилось в dictURL
 			if tc.expectedBody != "" {
 				var respons models.Response
 				// десериализуем resp.Body json в go model Response
 				json.Unmarshal(resp.Body(), &respons)
 
-				originalURL, _ := s.Storage.GetURL(ctx, userID, respons.Result[1:])
+				originalURL, _ := s.Storage.GetURL(ctx, userID, respons.Result)
 				assert.Equal(t, tc.expectedBody, string(originalURL))
 			}
 		})

@@ -46,7 +46,6 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 	}
 	cookieStr := cookie.Value
 	userID, err := util.GetUserID(cookieStr)
-	fmt.Println(userID)
 	if err != nil {
 		log.Println("[MakeShortURL] Token is not valid", err)
 	}
@@ -95,7 +94,6 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 	}
 	cookieStr := cookie.Value
 	userID, err := util.GetUserID(cookieStr)
-	fmt.Println(userID)
 	if err != nil {
 		log.Println("[GetURL] Token is not valid", err)
 	}
@@ -156,8 +154,9 @@ func (s *ShortURL) JSONShortURL(w http.ResponseWriter, r *http.Request) {
 	logger.Log.Info("originalURL при запросе эндпоинта /api/shorten", zap.String("url", string(originalURL)))
 
 	shortURLKey := util.GenerateKey()
+	shortURLKeyFull := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
 
-	if err := s.Storage.AddURL(s.Ctx, userID, shortURLKey, []byte(originalURL)); err != nil {
+	if err := s.Storage.AddURL(s.Ctx, userID, shortURLKeyFull, []byte(originalURL)); err != nil {
 		respons := models.Response{
 			Result: err.Error(),
 		}
@@ -174,9 +173,9 @@ func (s *ShortURL) JSONShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortURL := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
+	//shortURL := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
 	respons := models.Response{
-		Result: shortURL,
+		Result: shortURLKeyFull,
 	}
 
 	responsJSON, err := json.Marshal(respons)
