@@ -71,7 +71,7 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 	if err := s.Storage.AddURL(s.Ctx, userID, shortURLKeyFull, originalURL); err != nil {
 		w.Header().Set("Content-type", "text/plain")
 		w.WriteHeader(http.StatusConflict)
-		w.Write([]byte(fmt.Sprint(config.Config.BaseAddress, "/", err.Error())))
+		w.Write([]byte(err.Error()))
 
 		return
 	}
