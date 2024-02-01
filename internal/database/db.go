@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
+	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -28,7 +29,12 @@ func NewDataBase(ctx context.Context) DataBase {
 		log.Printf("[Open DB] Не удалось установить соединение с базой данных: %q", err)
 	}
 
-	query := `CREATE TABLE IF NOT EXISTS storage(correlationId VARCHAR (255), shortURLKey VARCHAR (255), originalURL VARCHAR (255))`
+	query := `CREATE TABLE IF NOT EXISTS storage(
+    correlationId VARCHAR (255),
+    userId VARCHAR (255),
+    shortURLKey VARCHAR (255),
+    originalURL VARCHAR (255)
+    )`
 
 	_, err = db.ExecContext(ctx, query)
 	if err != nil {
@@ -40,9 +46,9 @@ func NewDataBase(ctx context.Context) DataBase {
 	return DataBase{conn: db}
 }
 
-func (d DataBase) AddURL(ctx context.Context, shortURLKey string, originalURL []byte) error {
+func (d DataBase) AddURL(ctx context.Context, userId uuid.UUID, shortURLKey string, originalURL []byte) error {
 
-	query := `INSERT INTO storage (shortURLKey, originalURL) VALUES($1, $2)`
+	query := `INSERT INTO storage (userId, shortURLKey, originalURL) VALUES($1, $2, $3)`
 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
@@ -53,7 +59,7 @@ func (d DataBase) AddURL(ctx context.Context, shortURLKey string, originalURL []
 	}
 	defer stmt.Close()
 
-	_, err = stmt.ExecContext(ctx, shortURLKey, originalURL)
+	_, err = stmt.ExecContext(ctx, userId, shortURLKey, originalURL)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
@@ -70,20 +76,16 @@ func (d DataBase) AddURL(ctx context.Context, shortURLKey string, originalURL []
 
 }
 
-func (d DataBase) GetURL(ctx context.Context, shortURLKey string) ([]byte, bool) {
+func (d DataBase) GetURL(ctx context.Context, userId uuid.UUID, shortURLKey string) ([]byte, bool) {
 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
-	//db, err := sql.Open("pgx", config.Config.DatabaseDSN)
-	//if err != nil {
-	//	log.Printf("[Open DB] Не удалось установить соединение с базой данных: %q", err)
-	//}
-	//defer db.Close()
-
 	row := d.conn.QueryRowContext(
 		ctx,
-		"SELECT originalURL FROM storage WHERE shortURLKey = $1", fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey),
+		"SELECT originalURL FROM storage WHERE userId = $1 AND shortURLKey = $2",
+		userId,
+		fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey),
 	)
 
 	var originalURL sql.NullString
@@ -100,7 +102,7 @@ func (d DataBase) GetURL(ctx context.Context, shortURLKey string) ([]byte, bool)
 
 }
 
-func (d DataBase) AddBatchURL(ctx context.Context, batchList []models.BatchURL) error {
+func (d DataBase) AddBatchURL(ctx context.Context, userId uuid.UUID, batchList []models.BatchURL) error {
 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
@@ -110,7 +112,7 @@ func (d DataBase) AddBatchURL(ctx context.Context, batchList []models.BatchURL) 
 		log.Printf("Ошибка начала транзакции: %q", err)
 	}
 
-	query := `INSERT INTO storage (correlationId, shortURLKey, originalURL) VALUES($1, $2, $3)`
+	query := `INSERT INTO storage (correlationId, userId, shortURLKey, originalURL) VALUES($1, $2, $3, $4)`
 
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
@@ -119,7 +121,7 @@ func (d DataBase) AddBatchURL(ctx context.Context, batchList []models.BatchURL) 
 	defer stmt.Close()
 
 	for _, v := range batchList {
-		_, err = stmt.ExecContext(ctx, v.Correlation, v.ShortURL, v.OriginalURL)
+		_, err = stmt.ExecContext(ctx, v.Correlation, userId, v.ShortURL, v.OriginalURL)
 		if err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
@@ -164,5 +166,46 @@ func (d DataBase) GetShortURLinDB(ctx context.Context, originalURL []byte) strin
 	}
 
 	return ""
+
+}
+
+func (d DataBase) UserURLList(ctx context.Context, userId uuid.UUID) ([]models.ResponseUserURL, bool) {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
+
+	rows, err := d.conn.QueryContext(
+		ctx,
+		"SELECT shortURLKey, originalURL FROM storage WHERE userId = $1",
+		userId,
+	)
+	if err != nil {
+		log.Printf("[QueryContext] Не удалось получить данные по userId: %q", err)
+	}
+	defer rows.Close()
+
+	var userURLList []models.ResponseUserURL
+	var userURL models.ResponseUserURL
+
+	for rows.Next() {
+
+		err = rows.Scan(&userURL.ShortURL, &userURL.OriginalURL)
+		if err != nil {
+			log.Printf("[rows Scan] Не удалось преобразовать данные: %q", err)
+		}
+
+		userURLList = append(userURLList, userURL)
+	}
+	// проверяем на ошибки
+	err = rows.Err()
+	if err != nil {
+		log.Printf("[rows Err]: %q", err)
+	}
+
+	// если список пустой, то в базе нет записей
+	if len(userURLList) == 0 {
+		return userURLList, false
+	}
+
+	return userURLList, true
 
 }

@@ -20,6 +20,7 @@ func init() {
 	config.ConfigLogger()
 	config.ConfigFileStorage()
 	config.ConfigDatabaseDSN()
+	config.ConfigSecretKey()
 }
 
 func main() {
@@ -57,10 +58,11 @@ func runServer(ctx context.Context) error {
 	router.HandleFunc("/ping", storage.PingDB).Methods("GET")
 	router.HandleFunc("/", storage.MakeShortURL).Methods("POST")
 	router.HandleFunc("/{id}", storage.GetURL).Methods("GET")
-	router.HandleFunc("/api/shorten", storage.APIShortURL).Methods("POST")
+	router.HandleFunc("/api/shorten", storage.JSONShortURL).Methods("POST")
 	router.HandleFunc("/api/shorten/batch", storage.Batch).Methods("POST")
+	router.HandleFunc("/api/user/urls", storage.UserDictURL).Methods("GET")
 
-	router.Use(logger.LoggingMiddleware, zip.GzipMiddleware)
+	router.Use(storage.TokenMiddleware, logger.LoggingMiddleware, zip.GzipMiddleware)
 
 	if err := http.ListenAndServe(config.Config.ServerPort, router); err != nil {
 		return fmt.Errorf("[ListenAndServe] запустить сервер: %q", err)

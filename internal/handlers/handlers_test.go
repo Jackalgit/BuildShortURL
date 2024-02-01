@@ -6,7 +6,9 @@ import (
 	"fmt"
 	dicturl "github.com/Jackalgit/BuildShortURL/internal/dictURL"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
+	"github.com/Jackalgit/BuildShortURL/internal/util"
 	"github.com/go-resty/resty/v2"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -19,8 +21,14 @@ import (
 func TestShortURL_GetURL(t *testing.T) {
 	ctx := context.Background()
 	dictURL := dicturl.NewDictURL()
-	dictURL.AddURL(ctx, "qweQWErtyQ", []byte("long long long url"))
+	userID := uuid.New()
+
+	dictURL.AddURL(ctx, userID, "qweQWErtyQ", []byte("long long long url"))
+
 	s := ShortURL{Ctx: ctx, Storage: dictURL}
+
+	tokenString := util.BuildJWTString(userID)
+	cookie := http.Cookie{Name: "token", Value: tokenString}
 
 	tests := []struct {
 		name       string
@@ -40,6 +48,7 @@ func TestShortURL_GetURL(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 
 			r := httptest.NewRequest(tc.method, tc.request, nil)
+			r.AddCookie(&cookie)
 			w := httptest.NewRecorder()
 
 			s.GetURL(w, r)
@@ -58,6 +67,13 @@ func TestShortURL_GetURL(t *testing.T) {
 }
 
 func TestShortURL_MakeShortURL(t *testing.T) {
+	ctx := context.Background()
+	dictURL := dicturl.NewDictURL()
+	s := ShortURL{Ctx: ctx, Storage: dictURL}
+
+	userID := uuid.New()
+	tokenString := util.BuildJWTString(userID)
+	cookie := http.Cookie{Name: "token", Value: tokenString}
 
 	tests := []struct {
 		name        string
@@ -87,14 +103,9 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 			bodyReader := strings.NewReader(tc.Body)
 
 			r := httptest.NewRequest(tc.method, "/", bodyReader)
+			r.AddCookie(&cookie)
 			w := httptest.NewRecorder()
 
-			ctx := context.Background()
-
-			dictURL := dicturl.NewDictURL()
-			s := ShortURL{Ctx: ctx, Storage: dictURL}
-
-			//s := NewShortURL(ctx)
 			s.MakeShortURL(w, r)
 
 			require.Equal(t, tc.statusCode, w.Code, "The response code does not match what is expected")
@@ -112,24 +123,24 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 			err = result.Body.Close()
 			require.NoError(t, err)
 
-			originalURL, _ := s.Storage.GetURL(ctx, string(bodyResult)[1:])
+			originalURL, _ := s.Storage.GetURL(ctx, userID, string(bodyResult)[1:])
 			assert.Equal(t, tc.Body, string(originalURL))
-
-			//assert.Equal(t, tc.Body, string(s.Storage[string(bodyResult)[1:]]))
 
 		})
 	}
 
 }
 
-func TestShortURL_APIShortURL(t *testing.T) {
+func TestShortURL_JSONShortURL(t *testing.T) {
 	ctx := context.Background()
-
 	dictURL := dicturl.NewDictURL()
 	s := ShortURL{Ctx: ctx, Storage: dictURL}
 
-	//dictURL := NewShortURL(ctx)
-	handler := http.HandlerFunc(s.APIShortURL)
+	userID := uuid.New()
+	tokenString := util.BuildJWTString(userID)
+	cookie := http.Cookie{Name: "token", Value: tokenString}
+
+	handler := http.HandlerFunc(s.JSONShortURL)
 	srv := httptest.NewServer(handler)
 	defer srv.Close()
 
@@ -167,6 +178,7 @@ func TestShortURL_APIShortURL(t *testing.T) {
 			req := resty.New().R()
 			req.Method = tc.method
 			req.URL = srv.URL
+			req.SetCookie(&cookie)
 
 			if len(tc.body) > 0 {
 				req.SetHeader("Content-Type", "application/json")
@@ -185,7 +197,7 @@ func TestShortURL_APIShortURL(t *testing.T) {
 				// десериализуем resp.Body json в go model Response
 				json.Unmarshal(resp.Body(), &respons)
 
-				originalURL, _ := s.Storage.GetURL(ctx, respons.Result[1:])
+				originalURL, _ := s.Storage.GetURL(ctx, userID, respons.Result[1:])
 				assert.Equal(t, tc.expectedBody, string(originalURL))
 			}
 		})

@@ -2,6 +2,10 @@ package config
 
 import (
 	"flag"
+	"github.com/Jackalgit/BuildShortURL/internal/models"
+	"github.com/joho/godotenv"
+	"github.com/kelseyhightower/envconfig"
+	"log"
 	"os"
 )
 
@@ -11,6 +15,7 @@ var Config struct {
 	LogLevel        string
 	FileStoragePath string
 	DatabaseDSN     string
+	SECRET_KEY      string
 }
 
 func ConfigServerPort() {
@@ -60,5 +65,24 @@ func ConfigDatabaseDSN() {
 	if envDatabaseDSN := os.Getenv("DATABASE_DSN"); envDatabaseDSN != "" {
 		Config.DatabaseDSN = envDatabaseDSN
 	}
+
+}
+
+func ConfigSecretKey() {
+
+	secret := models.Secret{}
+
+	for _, fileName := range []string{".env"} {
+		err := godotenv.Load(fileName)
+		if err != nil {
+			log.Println("[SECRET_KEY]: ", err)
+		}
+	}
+
+	if err := envconfig.Process("", &secret); err != nil {
+		log.Println("[SECRET_KEY]: ", err)
+	}
+
+	Config.SECRET_KEY = secret.SECRET_KEY
 
 }

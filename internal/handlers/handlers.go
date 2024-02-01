@@ -8,7 +8,9 @@ import (
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	"github.com/Jackalgit/BuildShortURL/internal/logger"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
+	"github.com/Jackalgit/BuildShortURL/internal/userID"
 	"github.com/Jackalgit/BuildShortURL/internal/util"
+	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"go.uber.org/zap"
 	"io"
@@ -18,14 +20,16 @@ import (
 )
 
 type Repository interface {
-	AddURL(ctx context.Context, shortURLKey string, originalURL []byte) error
-	GetURL(ctx context.Context, shortURLKey string) ([]byte, bool)
-	AddBatchURL(ctx context.Context, batchList []models.BatchURL) error
+	AddURL(ctx context.Context, userId uuid.UUID, shortURLKey string, originalURL []byte) error
+	GetURL(ctx context.Context, userId uuid.UUID, shortURLKey string) ([]byte, bool)
+	AddBatchURL(ctx context.Context, userId uuid.UUID, batchList []models.BatchURL) error
+	UserURLList(ctx context.Context, userId uuid.UUID) ([]models.ResponseUserURL, bool)
 }
 
 type ShortURL struct {
-	Ctx     context.Context
-	Storage Repository
+	Ctx             context.Context
+	Storage         Repository
+	DictUserIdToken userID.DictUserIdToken
 }
 
 func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
@@ -35,6 +39,21 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
 		return
 	}
+
+	cookie, err := r.Cookie("token")
+	if err == http.ErrNoCookie {
+		log.Println("[MakeShortURL] No Cookie:", err)
+	}
+	cookieStr := cookie.Value
+	userId, err := util.GetUserID(cookieStr)
+	if err != nil {
+		log.Println("[MakeShortURL] Token is not valid", err)
+	}
+	if userId.String() == "" {
+		http.Error(w, "No User ID in token", http.StatusUnauthorized)
+		return
+	}
+
 	originalURL, err := io.ReadAll(r.Body)
 	logger.Log.Info("originalURL при запросе на эндпоинта /", zap.String("url", string(originalURL)))
 
@@ -48,7 +67,7 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 
 	shortURLKey := util.GenerateKey()
 
-	if err := s.Storage.AddURL(s.Ctx, shortURLKey, originalURL); err != nil {
+	if err := s.Storage.AddURL(s.Ctx, userId, shortURLKey, originalURL); err != nil {
 		w.Header().Set("Content-type", "text/plain")
 		w.WriteHeader(http.StatusConflict)
 		w.Write([]byte(fmt.Sprint(config.Config.BaseAddress, "/", err.Error())))
@@ -67,6 +86,21 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Only Get requests are allowed!", http.StatusMethodNotAllowed)
 		return
 	}
+
+	cookie, err := r.Cookie("token")
+	if err == http.ErrNoCookie {
+		log.Println("[GetURL] No Cookie:", err)
+	}
+	cookieStr := cookie.Value
+	userId, err := util.GetUserID(cookieStr)
+	if err != nil {
+		log.Println("[GetURL] Token is not valid", err)
+	}
+	if userId.String() == "" {
+		http.Error(w, "No User ID in token", http.StatusUnauthorized)
+		return
+	}
+
 	logger.Log.Info("Передаваемый ключ в пути запроса", zap.String("url", r.URL.Path[1:]))
 
 	shortURLKey := r.URL.Path[1:]
@@ -75,7 +109,7 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	originalURL, found := s.Storage.GetURL(s.Ctx, shortURLKey)
+	originalURL, found := s.Storage.GetURL(s.Ctx, userId, shortURLKey)
 
 	logger.Log.Info("originalURL при GET запросе", zap.String("url", string(originalURL)))
 	if !found {
@@ -87,9 +121,23 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
+func (s *ShortURL) JSONShortURL(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only Post requests are allowed!", http.StatusMethodNotAllowed)
+		return
+	}
+
+	cookie, err := r.Cookie("token")
+	if err == http.ErrNoCookie {
+		log.Println("[JSONShortURL] No Cookie:", err)
+	}
+	cookieStr := cookie.Value
+	userId, err := util.GetUserID(cookieStr)
+	if err != nil {
+		log.Println("[JSONShortURL] Token is not valid", err)
+	}
+	if userId.String() == "" {
+		http.Error(w, "No User ID in token", http.StatusUnauthorized)
 		return
 	}
 
@@ -104,7 +152,7 @@ func (s *ShortURL) APIShortURL(w http.ResponseWriter, r *http.Request) {
 
 	shortURLKey := util.GenerateKey()
 
-	if err := s.Storage.AddURL(s.Ctx, shortURLKey, []byte(originalURL)); err != nil {
+	if err := s.Storage.AddURL(s.Ctx, userId, shortURLKey, []byte(originalURL)); err != nil {
 		respons := models.Response{
 			Result: err.Error(),
 		}
@@ -160,6 +208,20 @@ func (s *ShortURL) PingDB(w http.ResponseWriter, r *http.Request) {
 
 func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 
+	cookie, err := r.Cookie("token")
+	if err == http.ErrNoCookie {
+		log.Println("[Batch] No Cookie:", err)
+	}
+	cookieStr := cookie.Value
+	userId, err := util.GetUserID(cookieStr)
+	if err != nil {
+		log.Println("[Batch] Token is not valid", err)
+	}
+	if userId.String() == "" {
+		http.Error(w, "No User ID in token", http.StatusUnauthorized)
+		return
+	}
+
 	requestList, err := util.RequestListJSONToStruct(r.Body)
 	if err != nil {
 		http.Error(w, "Not read body", http.StatusBadRequest)
@@ -167,7 +229,7 @@ func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 	}
 	// создаем структуру для ответа хендлера
 	var responseList []models.ResponseBatch
-	// создаем структуру которую передадим для хранения в память или в базе данных
+	// создаем структуру которую передадим для хранения в память или в базу данных
 	var batchList []models.BatchURL
 
 	for _, v := range requestList {
@@ -187,7 +249,7 @@ func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 		batchList = append(batchList, batchURL)
 	}
 
-	if err := s.Storage.AddBatchURL(s.Ctx, batchList); err != nil {
+	if err := s.Storage.AddBatchURL(s.Ctx, userId, batchList); err != nil {
 		w.Header().Set("Content-type", "text/plain")
 		w.WriteHeader(http.StatusConflict)
 		w.Write([]byte(err.Error()))
@@ -203,6 +265,88 @@ func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+	w.Write(responsJSON)
+
+}
+
+func (s *ShortURL) TokenMiddleware(next http.Handler) http.Handler {
+	tokenFn := func(w http.ResponseWriter, r *http.Request) {
+		// добываем токен из запроса
+		cookie, err := r.Cookie("token")
+		// если токена нет, то генерируем его и возвращаем клиенту
+		if err == http.ErrNoCookie {
+			s.SetCookie(w)
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// добываем значение токена, а из него userId.
+		// если токен не валидный, то генерируем новый токен и возвращаем его клиенту
+		cookieStr := cookie.Value
+		userId, err := util.GetUserID(cookieStr)
+		if err != nil {
+			s.SetCookie(w)
+			next.ServeHTTP(w, r)
+			return
+		}
+		// если в токене нет userId, то возвращаем ошибку авторизации
+		if userId.String() == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		// если токен валидный, но userId нет в DictUserId, то генерируем токен и возвращаем его клиенту
+		if _, ok := s.DictUserIdToken[userId]; !ok {
+			s.SetCookie(w)
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+
+	}
+	return http.HandlerFunc(tokenFn)
+}
+
+func (s *ShortURL) SetCookie(w http.ResponseWriter) {
+	id := uuid.New()
+
+	tokenString := util.BuildJWTString(id)
+
+	s.DictUserIdToken.AddUserId(id, tokenString)
+
+	cookie := http.Cookie{Name: "token", Value: tokenString}
+	http.SetCookie(w, &cookie)
+}
+
+func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("token")
+	if err == http.ErrNoCookie {
+		log.Println("[UserDictURL] No Cookie:", err)
+	}
+	cookieStr := cookie.Value
+	userId, err := util.GetUserID(cookieStr)
+	if err != nil {
+		log.Println("[UserDictURL] Token is not valid", err)
+	}
+	if userId.String() == "" {
+		http.Error(w, "No User ID in token", http.StatusUnauthorized)
+		return
+	}
+
+	userURLList, foundDictUser := s.Storage.UserURLList(s.Ctx, userId)
+	if !foundDictUser {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	responsJSON, err := json.Marshal(userURLList)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	w.Write(responsJSON)
 
 }
