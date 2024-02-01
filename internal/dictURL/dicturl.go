@@ -2,6 +2,7 @@ package dicturl
 
 import (
 	"context"
+	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/Jackalgit/BuildShortURL/internal/util"
@@ -30,6 +31,7 @@ func (d DictURL) AddURL(ctx context.Context, userID uuid.UUID, shortURLKey strin
 		}
 		userDictURL[shortURLKey] = originalURL
 	}
+	fmt.Print(d)
 
 	util.SaveURLToJSONFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
 
@@ -41,12 +43,20 @@ func (d DictURL) GetURL(ctx context.Context, userID uuid.UUID, shortURLKey strin
 
 	userDictURL, foundDictUser := d[userID]
 	if !foundDictUser {
+		for _, dictUser := range d {
+			for short, origin := range dictUser {
+				if short == shortURLKey {
+					return origin, true
+				}
+			}
+		}
+
 		return nil, foundDictUser
 	}
 
-	originalURL, foundShortURLKey := userDictURL[shortURLKey]
+	origin, foundShortURLKey := userDictURL[shortURLKey]
 
-	return originalURL, foundShortURLKey
+	return origin, foundShortURLKey
 
 }
 

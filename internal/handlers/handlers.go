@@ -46,6 +46,7 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 	}
 	cookieStr := cookie.Value
 	userID, err := util.GetUserID(cookieStr)
+	fmt.Println(userID)
 	if err != nil {
 		log.Println("[MakeShortURL] Token is not valid", err)
 	}
@@ -93,6 +94,7 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 	}
 	cookieStr := cookie.Value
 	userID, err := util.GetUserID(cookieStr)
+	fmt.Println(userID)
 	if err != nil {
 		log.Println("[GetURL] Token is not valid", err)
 	}
