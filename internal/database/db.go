@@ -59,7 +59,9 @@ func (d DataBase) AddURL(ctx context.Context, userID uuid.UUID, shortURLKey stri
 	}
 	defer stmt.Close()
 
-	_, err = stmt.ExecContext(ctx, userID, shortURLKey, originalURL)
+	shortURLKeyFull := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
+
+	_, err = stmt.ExecContext(ctx, userID, shortURLKeyFull, originalURL)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
@@ -121,7 +123,12 @@ func (d DataBase) AddBatchURL(ctx context.Context, userID uuid.UUID, batchList [
 	defer stmt.Close()
 
 	for _, v := range batchList {
-		_, err = stmt.ExecContext(ctx, v.Correlation, userID, v.ShortURL, v.OriginalURL)
+		_, err = stmt.ExecContext(
+			ctx, v.Correlation,
+			userID,
+			fmt.Sprint(config.Config.BaseAddress, "/", v.ShortURL),
+			v.OriginalURL,
+		)
 		if err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
