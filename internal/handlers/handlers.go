@@ -66,8 +66,9 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	shortURLKey := util.GenerateKey()
+	shortURLKeyFull := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
 
-	if err := s.Storage.AddURL(s.Ctx, userID, shortURLKey, originalURL); err != nil {
+	if err := s.Storage.AddURL(s.Ctx, userID, shortURLKeyFull, originalURL); err != nil {
 		w.Header().Set("Content-type", "text/plain")
 		w.WriteHeader(http.StatusConflict)
 		w.Write([]byte(fmt.Sprint(config.Config.BaseAddress, "/", err.Error())))
@@ -109,7 +110,9 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	originalURL, found := s.Storage.GetURL(s.Ctx, userID, shortURLKey)
+	shortURLKeyFull := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
+
+	originalURL, found := s.Storage.GetURL(s.Ctx, userID, shortURLKeyFull)
 
 	logger.Log.Info("originalURL при GET запросе", zap.String("url", string(originalURL)))
 	if !found {
@@ -148,11 +151,13 @@ func (s *ShortURL) JSONShortURL(w http.ResponseWriter, r *http.Request) {
 	}
 	originalURL := request.URL
 
-	logger.Log.Info("originalURL при запросе эндпоинта /api/shorten", zap.String("url", string(originalURL)))
+	logger.Log.Info("originalURL при запросе эндпоинта /api/shorten", zap.String("url", originalURL))
 
 	shortURLKey := util.GenerateKey()
 
-	if err := s.Storage.AddURL(s.Ctx, userID, shortURLKey, []byte(originalURL)); err != nil {
+	shortURLKeyFull := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
+
+	if err := s.Storage.AddURL(s.Ctx, userID, shortURLKeyFull, []byte(originalURL)); err != nil {
 		respons := models.Response{
 			Result: err.Error(),
 		}
