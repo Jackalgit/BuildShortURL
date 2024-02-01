@@ -83,6 +83,6 @@ func ConfigSecretKey() {
 		log.Println("[SECRET_KEY]: ", err)
 	}
 
-	Config.SecretKey = secret.Secret_key
+	Config.SecretKey = secret.SecretKey
 
 }

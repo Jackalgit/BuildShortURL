@@ -6,7 +6,7 @@ import (
 	"github.com/Jackalgit/BuildShortURL/internal/database"
 	dicturl "github.com/Jackalgit/BuildShortURL/internal/dictURL"
 	"github.com/Jackalgit/BuildShortURL/internal/handlers"
-	"github.com/Jackalgit/BuildShortURL/internal/userID"
+	"github.com/Jackalgit/BuildShortURL/internal/userid"
 )
 
 func InitStorage(ctx context.Context) *handlers.ShortURL {
@@ -15,14 +15,14 @@ func InitStorage(ctx context.Context) *handlers.ShortURL {
 		return &handlers.ShortURL{
 			Ctx:             ctx,
 			Storage:         database.NewDataBase(ctx),
-			DictUserIdToken: userID.NewDictUserIdToken(),
+			DictUserIDToken: userid.NewDictUserIDToken(),
 		}
 	}
 
 	return &handlers.ShortURL{
 		Ctx:             ctx,
 		Storage:         dicturl.NewDictURL(),
-		DictUserIdToken: userID.NewDictUserIdToken(),
+		DictUserIDToken: userid.NewDictUserIDToken(),
 	}
 
 }

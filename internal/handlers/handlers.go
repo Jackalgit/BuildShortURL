@@ -8,7 +8,7 @@ import (
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	"github.com/Jackalgit/BuildShortURL/internal/logger"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
-	"github.com/Jackalgit/BuildShortURL/internal/userID"
+	"github.com/Jackalgit/BuildShortURL/internal/userid"
 	"github.com/Jackalgit/BuildShortURL/internal/util"
 	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -20,16 +20,16 @@ import (
 )
 
 type Repository interface {
-	AddURL(ctx context.Context, userId uuid.UUID, shortURLKey string, originalURL []byte) error
-	GetURL(ctx context.Context, userId uuid.UUID, shortURLKey string) ([]byte, bool)
-	AddBatchURL(ctx context.Context, userId uuid.UUID, batchList []models.BatchURL) error
-	UserURLList(ctx context.Context, userId uuid.UUID) ([]models.ResponseUserURL, bool)
+	AddURL(ctx context.Context, userID uuid.UUID, shortURLKey string, originalURL []byte) error
+	GetURL(ctx context.Context, userID uuid.UUID, shortURLKey string) ([]byte, bool)
+	AddBatchURL(ctx context.Context, userID uuid.UUID, batchList []models.BatchURL) error
+	UserURLList(ctx context.Context, userID uuid.UUID) ([]models.ResponseUserURL, bool)
 }
 
 type ShortURL struct {
 	Ctx             context.Context
 	Storage         Repository
-	DictUserIDToken userID.DictUserIDToken
+	DictUserIDToken userid.DictUserIDToken
 }
 
 func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
@@ -213,11 +213,11 @@ func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 		log.Println("[Batch] No Cookie:", err)
 	}
 	cookieStr := cookie.Value
-	userId, err := util.GetUserID(cookieStr)
+	userID, err := util.GetUserID(cookieStr)
 	if err != nil {
 		log.Println("[Batch] Token is not valid", err)
 	}
-	if userId.String() == "" {
+	if userID.String() == "" {
 		http.Error(w, "No User ID in token", http.StatusUnauthorized)
 		return
 	}
@@ -249,7 +249,7 @@ func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 		batchList = append(batchList, batchURL)
 	}
 
-	if err := s.Storage.AddBatchURL(s.Ctx, userId, batchList); err != nil {
+	if err := s.Storage.AddBatchURL(s.Ctx, userID, batchList); err != nil {
 		w.Header().Set("Content-type", "text/plain")
 		w.WriteHeader(http.StatusConflict)
 		w.Write([]byte(err.Error()))

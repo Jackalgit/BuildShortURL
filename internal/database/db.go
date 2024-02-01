@@ -31,7 +31,7 @@ func NewDataBase(ctx context.Context) DataBase {
 
 	query := `CREATE TABLE IF NOT EXISTS storage(
     correlationId VARCHAR (255),
-    userId VARCHAR (255),
+    userID VARCHAR (255),
     shortURLKey VARCHAR (255),
     originalURL VARCHAR (255)
     )`
@@ -48,7 +48,7 @@ func NewDataBase(ctx context.Context) DataBase {
 
 func (d DataBase) AddURL(ctx context.Context, userID uuid.UUID, shortURLKey string, originalURL []byte) error {
 
-	query := `INSERT INTO storage (userId, shortURLKey, originalURL) VALUES($1, $2, $3)`
+	query := `INSERT INTO storage (userID, shortURLKey, originalURL) VALUES($1, $2, $3)`
 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
@@ -83,7 +83,7 @@ func (d DataBase) GetURL(ctx context.Context, userID uuid.UUID, shortURLKey stri
 
 	row := d.conn.QueryRowContext(
 		ctx,
-		"SELECT originalURL FROM storage WHERE userId = $1 AND shortURLKey = $2",
+		"SELECT originalURL FROM storage WHERE userID = $1 AND shortURLKey = $2",
 		userID,
 		fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey),
 	)
@@ -102,7 +102,7 @@ func (d DataBase) GetURL(ctx context.Context, userID uuid.UUID, shortURLKey stri
 
 }
 
-func (d DataBase) AddBatchURL(ctx context.Context, userId uuid.UUID, batchList []models.BatchURL) error {
+func (d DataBase) AddBatchURL(ctx context.Context, userID uuid.UUID, batchList []models.BatchURL) error {
 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
@@ -112,7 +112,7 @@ func (d DataBase) AddBatchURL(ctx context.Context, userId uuid.UUID, batchList [
 		log.Printf("Ошибка начала транзакции: %q", err)
 	}
 
-	query := `INSERT INTO storage (correlationId, userId, shortURLKey, originalURL) VALUES($1, $2, $3, $4)`
+	query := `INSERT INTO storage (correlationId, userID, shortURLKey, originalURL) VALUES($1, $2, $3, $4)`
 
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
@@ -121,7 +121,7 @@ func (d DataBase) AddBatchURL(ctx context.Context, userId uuid.UUID, batchList [
 	defer stmt.Close()
 
 	for _, v := range batchList {
-		_, err = stmt.ExecContext(ctx, v.Correlation, userId, v.ShortURL, v.OriginalURL)
+		_, err = stmt.ExecContext(ctx, v.Correlation, userID, v.ShortURL, v.OriginalURL)
 		if err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
@@ -175,7 +175,7 @@ func (d DataBase) UserURLList(ctx context.Context, userID uuid.UUID) ([]models.R
 
 	rows, err := d.conn.QueryContext(
 		ctx,
-		"SELECT shortURLKey, originalURL FROM storage WHERE userId = $1",
+		"SELECT shortURLKey, originalURL FROM storage WHERE userID = $1",
 		userID,
 	)
 	if err != nil {
