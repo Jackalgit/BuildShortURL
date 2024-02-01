@@ -23,7 +23,7 @@ func TestShortURL_GetURL(t *testing.T) {
 	dictURL := dicturl.NewDictURL()
 	userID := uuid.New()
 
-	dictURL.AddURL(ctx, userID, "qweQWErtyQ", []byte("long long long url"))
+	dictURL.AddURL(ctx, userID, "/qweQWErtyQ", []byte("long long long url"))
 
 	s := ShortURL{Ctx: ctx, Storage: dictURL}
 
@@ -122,8 +122,8 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 			err = result.Body.Close()
 			require.NoError(t, err)
 
-			originalURL, _ := s.Storage.GetURL(ctx, userID, string(bodyResult)[1:])
-			//originalURL, _ := s.Storage.GetURL(ctx, userID, string(bodyResult))
+			//originalURL, _ := s.Storage.GetURL(ctx, userID, string(bodyResult)[1:])
+			originalURL, _ := s.Storage.GetURL(ctx, userID, string(bodyResult))
 			assert.Equal(t, tc.Body, string(originalURL))
 
 		})
@@ -197,8 +197,9 @@ func TestShortURL_JSONShortURL(t *testing.T) {
 				// десериализуем resp.Body json в go model Response
 				json.Unmarshal(resp.Body(), &respons)
 
-				originalURL, _ := s.Storage.GetURL(ctx, userID, respons.Result[1:])
-				//originalURL, _ := s.Storage.GetURL(ctx, userID, respons.Result)
+				//originalURL, _ := s.Storage.GetURL(ctx, userID, respons.Result[1:])
+				fmt.Println(respons.Result)
+				originalURL, _ := s.Storage.GetURL(ctx, userID, respons.Result)
 
 				assert.Equal(t, tc.expectedBody, string(originalURL))
 			}
