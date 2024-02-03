@@ -3,13 +3,12 @@ package jobertask
 import (
 	"context"
 	"github.com/Jackalgit/BuildShortURL/internal/database"
-	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/google/uuid"
 	"log"
 )
 
 const (
-	numWorkers       = 100
+	numWorkers       = 5
 	numBatchDataBase = 10
 )
 
@@ -19,10 +18,10 @@ type Job struct {
 	Ctx      context.Context
 	JobID    uuid.UUID
 	UserID   uuid.UUID
-	TaskList *[]models.DeleteShortURL
+	TaskList *[]string
 }
 
-func NewJober(ctx context.Context, jobID uuid.UUID, userID uuid.UUID, taskList *[]models.DeleteShortURL) *Job {
+func NewJober(ctx context.Context, jobID uuid.UUID, userID uuid.UUID, taskList *[]string) *Job {
 	return &Job{
 		Ctx:      ctx,
 		JobID:    jobID,
@@ -53,8 +52,8 @@ func (j *Job) DeleteURL() *Job {
 
 }
 
-func Generator(doneCh chan struct{}, input *[]models.DeleteShortURL) chan models.DeleteShortURL {
-	inputCh := make(chan models.DeleteShortURL)
+func Generator(doneCh chan struct{}, input *[]string) chan string {
+	inputCh := make(chan string)
 
 	go func() {
 		defer close(inputCh)
@@ -71,16 +70,16 @@ func Generator(doneCh chan struct{}, input *[]models.DeleteShortURL) chan models
 	return inputCh
 }
 
-func fanOut(ctx context.Context, doneCh chan struct{}, userID uuid.UUID, inputCh chan models.DeleteShortURL) {
+func fanOut(ctx context.Context, doneCh chan struct{}, userID uuid.UUID, inputCh chan string) {
 
 	for i := 0; i < numWorkers; i++ {
 		Worker(ctx, doneCh, userID, inputCh)
 	}
 }
 
-func Worker(ctx context.Context, doneCh chan struct{}, userID uuid.UUID, inputCh chan models.DeleteShortURL) {
+func Worker(ctx context.Context, doneCh chan struct{}, userID uuid.UUID, inputCh chan string) {
 
-	var deleteList []models.DeleteShortURL
+	var deleteList []string
 
 	go func() {
 

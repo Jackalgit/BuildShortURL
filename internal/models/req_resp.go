@@ -24,5 +24,5 @@ type ResponseUserURL struct {
 }
 
 type DeleteShortURL struct {
-	ShortURL string `json:"short_url"`
+	ShortURL string
 }

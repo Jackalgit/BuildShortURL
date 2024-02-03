@@ -215,7 +215,7 @@ func (d DataBase) UserURLList(ctx context.Context, userID uuid.UUID) ([]models.R
 
 }
 
-func DeleteURLUser(ctx context.Context, userID uuid.UUID, deleteList []models.DeleteShortURL) error {
+func DeleteURLUser(ctx context.Context, userID uuid.UUID, deleteList []string) error {
 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
@@ -238,8 +238,8 @@ func DeleteURLUser(ctx context.Context, userID uuid.UUID, deleteList []models.De
 	}
 	defer stmt.Close()
 
-	for _, v := range deleteList {
-		_, err = stmt.ExecContext(ctx, v.ShortURL, userID)
+	for _, shortURL := range deleteList {
+		_, err = stmt.ExecContext(ctx, shortURL, userID)
 		if err != nil {
 			log.Printf("[ExecContext] %q", err)
 		}
