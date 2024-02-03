@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	numWorkers       = 10
-	numBatchDataBase = 100
+	numWorkers       = 3
+	numBatchDataBase = 1000
 )
 
 var JobDict = make(map[uuid.UUID]*Job)
