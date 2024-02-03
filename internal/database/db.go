@@ -34,7 +34,7 @@ func NewDataBase(ctx context.Context) DataBase {
     userID VARCHAR (255),
     shortURLKey VARCHAR (255),
     originalURL VARCHAR (255),
-    deletedFlag BOOLEAN DEFAULT false,
+    deletedFlag BOOL DEFAULT false,
     )`
 
 	_, err = db.ExecContext(ctx, query)
