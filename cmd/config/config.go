@@ -2,7 +2,6 @@ package config
 
 import (
 	"flag"
-	"fmt"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
@@ -60,10 +59,10 @@ func ConfigFileStorage() {
 }
 
 func ConfigDatabaseDSN() {
-	ps := fmt.Sprintf("host=%s port=%s dbname=%s sslmode=disable",
-		`localhost`, `5432`, `shorturl`)
+	//ps := fmt.Sprintf("host=%s port=%s dbname=%s sslmode=disable",
+	//	`localhost`, `5432`, `shorturl`)
 
-	flag.StringVar(&Config.DatabaseDSN, "d", ps, "Database source name")
+	flag.StringVar(&Config.DatabaseDSN, "d", "", "Database source name")
 
 	if envDatabaseDSN := os.Getenv("DATABASE_DSN"); envDatabaseDSN != "" {
 		Config.DatabaseDSN = envDatabaseDSN
