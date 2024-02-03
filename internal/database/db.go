@@ -29,13 +29,7 @@ func NewDataBase(ctx context.Context) DataBase {
 		log.Printf("[Open DB] Не удалось установить соединение с базой данных: %q", err)
 	}
 
-	query := `CREATE TABLE IF NOT EXISTS storage(
-    correlationId VARCHAR (255),
-    userID VARCHAR (255),
-    shortURLKey VARCHAR (255),
-    originalURL VARCHAR (255),
-    deletedFlag BOOL DEFAULT false,
-    )`
+	query := `CREATE TABLE IF NOT EXISTS storage (correlationId VARCHAR (255), userID VARCHAR (255), shortURLKey VARCHAR (255), originalURL VARCHAR (255), deletedFlag BOOLEAN DEFAULT false)`
 
 	_, err = db.ExecContext(ctx, query)
 	if err != nil {
