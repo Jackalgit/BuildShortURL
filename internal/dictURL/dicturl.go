@@ -38,24 +38,24 @@ func (d DictURL) AddURL(ctx context.Context, userID uuid.UUID, shortURLKey strin
 
 }
 
-func (d DictURL) GetURL(ctx context.Context, userID uuid.UUID, shortURLKey string) ([]byte, bool) {
+func (d DictURL) GetURL(ctx context.Context, userID uuid.UUID, shortURLKey string) ([]byte, bool, bool) {
 
 	userDictURL, foundDictUser := d[userID]
 	if !foundDictUser {
 		for _, dictUser := range d {
 			for short, origin := range dictUser {
 				if short == shortURLKey {
-					return origin, true
+					return origin, true, false
 				}
 			}
 		}
 
-		return nil, foundDictUser
+		return nil, foundDictUser, false
 	}
 
 	origin, foundShortURLKey := userDictURL[shortURLKey]
 
-	return origin, foundShortURLKey
+	return origin, foundShortURLKey, false
 
 }
 

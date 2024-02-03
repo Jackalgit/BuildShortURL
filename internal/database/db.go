@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/google/uuid"
@@ -32,7 +33,8 @@ func NewDataBase(ctx context.Context) DataBase {
     correlationId VARCHAR (255),
     userID VARCHAR (255),
     shortURLKey VARCHAR (255),
-    originalURL VARCHAR (255)
+    originalURL VARCHAR (255),
+    deletedFlag BOOLEAN DEFAULT TRUE,
     )`
 
 	_, err = db.ExecContext(ctx, query)
@@ -75,28 +77,33 @@ func (d DataBase) AddURL(ctx context.Context, userID uuid.UUID, shortURLKey stri
 
 }
 
-func (d DataBase) GetURL(ctx context.Context, userID uuid.UUID, shortURLKey string) ([]byte, bool) {
+func (d DataBase) GetURL(ctx context.Context, userID uuid.UUID, shortURLKey string) ([]byte, bool, bool) {
 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
 	row := d.conn.QueryRowContext(
 		ctx,
-		"SELECT originalURL FROM storage WHERE shortURLKey = $1",
+		"SELECT originalURL, deletedFlag FROM storage WHERE shortURLKey = $1",
 		shortURLKey,
 	)
 
 	var originalURL sql.NullString
-	err := row.Scan(&originalURL)
+	var deletedFlag bool
+
+	err := row.Scan(&originalURL, &deletedFlag)
 	if err != nil {
 		log.Printf("[row Scan] Не удалось преобразовать данные: %q", err)
+	}
+	if deletedFlag == true {
+		return nil, false, true
 	}
 
 	if originalURL.Valid {
 		log.Printf("Оригинальный УРЛ: %q", originalURL.String)
-		return []byte(originalURL.String), true
+		return []byte(originalURL.String), true, false
 	}
-	return nil, false
+	return nil, false, false
 
 }
 
@@ -212,4 +219,42 @@ func (d DataBase) UserURLList(ctx context.Context, userID uuid.UUID) ([]models.R
 
 	return userURLList, true
 
+}
+
+func DeleteURLUser(ctx context.Context, userID uuid.UUID, deleteList []models.DeleteShortURL) error {
+
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
+
+	db, err := sql.Open("pgx", config.Config.DatabaseDSN)
+	if err != nil {
+		return fmt.Errorf("[Open DB] Не удалось установить соединение с базой данных: %q", err)
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("Ошибка начала транзакции: %q", err)
+	}
+
+	query := `UPDATE storage SET deletedFlag = true WHERE shortURLKey = $1 AND userID = $2`
+
+	stmt, err := tx.PrepareContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("[PrepareContext] %s", err)
+	}
+	defer stmt.Close()
+
+	for _, v := range deleteList {
+		_, err = stmt.ExecContext(ctx, v.ShortURL, userID)
+		if err != nil {
+			log.Printf("[ExecContext] %q", err)
+		}
+		if err != nil {
+			tx.Rollback()
+			return fmt.Errorf("Ошибка записи в базу: %q", err)
+		}
+	}
+	tx.Commit()
+
+	return nil
 }

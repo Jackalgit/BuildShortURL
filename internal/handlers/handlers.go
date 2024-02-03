@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
+	"github.com/Jackalgit/BuildShortURL/internal/joberTask"
 	"github.com/Jackalgit/BuildShortURL/internal/logger"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/Jackalgit/BuildShortURL/internal/userid"
@@ -21,7 +22,7 @@ import (
 
 type Repository interface {
 	AddURL(ctx context.Context, userID uuid.UUID, shortURLKey string, originalURL []byte) error
-	GetURL(ctx context.Context, userID uuid.UUID, shortURLKey string) ([]byte, bool)
+	GetURL(ctx context.Context, userID uuid.UUID, shortURLKey string) ([]byte, bool, bool)
 	AddBatchURL(ctx context.Context, userID uuid.UUID, batchList []models.BatchURL) error
 	UserURLList(ctx context.Context, userID uuid.UUID) ([]models.ResponseUserURL, bool)
 }
@@ -112,9 +113,14 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 
 	shortURLKeyFull := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
 
-	originalURL, found := s.Storage.GetURL(s.Ctx, userID, shortURLKeyFull)
+	originalURL, found, deleteURL := s.Storage.GetURL(s.Ctx, userID, shortURLKeyFull)
 
 	logger.Log.Info("originalURL при GET запросе", zap.String("url", string(originalURL)))
+	if deleteURL {
+		w.WriteHeader(http.StatusGone)
+		return
+	}
+
 	if !found {
 		http.Error(w, "originalURL not found", http.StatusNotFound)
 		return
@@ -322,34 +328,68 @@ func (s *ShortURL) SetCookie(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("token")
-	if err == http.ErrNoCookie {
-		log.Println("[UserDictURL] No Cookie:", err)
-	}
-	cookieStr := cookie.Value
-	userID, err := util.GetUserID(cookieStr)
-	if err != nil {
-		log.Println("[UserDictURL] Token is not valid", err)
-	}
-	if userID.String() == "" {
-		http.Error(w, "No User ID in token", http.StatusUnauthorized)
-		return
+
+	if r.Method == http.MethodGet {
+
+		cookie, err := r.Cookie("token")
+		if err == http.ErrNoCookie {
+			log.Println("[UserDictURL] No Cookie:", err)
+		}
+		cookieStr := cookie.Value
+		userID, err := util.GetUserID(cookieStr)
+		if err != nil {
+			log.Println("[UserDictURL] Token is not valid", err)
+		}
+		if userID.String() == "" {
+			http.Error(w, "No User ID in token", http.StatusUnauthorized)
+			return
+		}
+
+		userURLList, foundDictUser := s.Storage.UserURLList(s.Ctx, userID)
+		if !foundDictUser {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		responsJSON, err := json.Marshal(userURLList)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(responsJSON)
 	}
 
-	userURLList, foundDictUser := s.Storage.UserURLList(s.Ctx, userID)
-	if !foundDictUser {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
+	if r.Method == http.MethodDelete {
 
-	responsJSON, err := json.Marshal(userURLList)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+		cookie, err := r.Cookie("token")
+		if err == http.ErrNoCookie {
+			log.Println("[UserDictURL] No Cookie:", err)
+		}
+		cookieStr := cookie.Value
+		userID, err := util.GetUserID(cookieStr)
+		if err != nil {
+			log.Println("[UserDictURL] Token is not valid", err)
+		}
+		if userID.String() == "" {
+			http.Error(w, "No User ID in token", http.StatusUnauthorized)
+			return
+		}
 
-	w.Header().Set("Content-type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsJSON)
+		requestListURLDelete, err := util.RequestListURLDelete(r.Body)
+		if err != nil {
+			http.Error(w, "Not read body", http.StatusBadRequest)
+			return
+		}
+
+		jobID := uuid.New()
+
+		job := joberTask.NewJober(s.Ctx, jobID, userID, &requestListURLDelete).DeleteURL()
+		joberTask.JobDict[jobID] = job
+
+		w.WriteHeader(http.StatusAccepted)
+	}
 
 }

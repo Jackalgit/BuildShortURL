@@ -36,3 +36,16 @@ func RequestListJSONToStruct(body io.Reader) ([]models.RequestBatch, error) {
 	return requestList, nil
 
 }
+
+func RequestListURLDelete(body io.Reader) ([]models.DeleteShortURL, error) {
+
+	var deleteList []models.DeleteShortURL
+
+	dec := json.NewDecoder(body)
+	if err := dec.Decode(&deleteList); err != nil {
+		return nil, err
+	}
+
+	return deleteList, nil
+
+}

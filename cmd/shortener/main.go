@@ -60,7 +60,7 @@ func runServer(ctx context.Context) error {
 	router.HandleFunc("/{id}", storage.GetURL).Methods("GET")
 	router.HandleFunc("/api/shorten", storage.JSONShortURL).Methods("POST")
 	router.HandleFunc("/api/shorten/batch", storage.Batch).Methods("POST")
-	router.HandleFunc("/api/user/urls", storage.UserDictURL).Methods("GET")
+	router.HandleFunc("/api/user/urls", storage.UserDictURL).Methods("GET", "DELETE")
 
 	router.Use(storage.TokenMiddleware, logger.LoggingMiddleware, zip.GzipMiddleware)
 
