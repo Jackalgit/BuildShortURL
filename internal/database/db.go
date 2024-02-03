@@ -95,7 +95,7 @@ func (d DataBase) GetURL(ctx context.Context, userID uuid.UUID, shortURLKey stri
 	if err != nil {
 		log.Printf("[row Scan] Не удалось преобразовать данные: %q", err)
 	}
-	if deletedFlag == true {
+	if deletedFlag {
 		return nil, false, true
 	}
 
@@ -251,7 +251,7 @@ func DeleteURLUser(ctx context.Context, userID uuid.UUID, deleteList []models.De
 		}
 		if err != nil {
 			tx.Rollback()
-			return fmt.Errorf("Ошибка записи в базу: %q", err)
+			return fmt.Errorf("ошибка записи в базу: %q", err)
 		}
 	}
 	tx.Commit()

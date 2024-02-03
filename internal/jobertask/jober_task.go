@@ -1,4 +1,4 @@
-package joberTask
+package jobertask
 
 import (
 	"context"
@@ -47,8 +47,6 @@ func (j *Job) DeleteURL() *Job {
 		inputCh := Generator(doneCh, j.TaskList)
 		// запускаем толпу рабочих дербанить канал
 		fanOut(ctx, doneCh, j.UserID, inputCh)
-
-		return
 	}()
 
 	return &Job{}
@@ -97,8 +95,9 @@ func Worker(ctx context.Context, doneCh chan struct{}, userID uuid.UUID, inputCh
 					return
 				}
 			}
-			select {
-			case <-doneCh:
+
+			_, ok := <-doneCh
+			if !ok {
 				return
 			}
 		}

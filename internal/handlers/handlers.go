@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
-	"github.com/Jackalgit/BuildShortURL/internal/joberTask"
+	"github.com/Jackalgit/BuildShortURL/internal/jobertask"
 	"github.com/Jackalgit/BuildShortURL/internal/logger"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/Jackalgit/BuildShortURL/internal/userid"
@@ -386,8 +386,8 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 
 		jobID := uuid.New()
 
-		job := joberTask.NewJober(s.Ctx, jobID, userID, &requestListURLDelete).DeleteURL()
-		joberTask.JobDict[jobID] = job
+		job := jobertask.NewJober(s.Ctx, jobID, userID, &requestListURLDelete).DeleteURL()
+		jobertask.JobDict[jobID] = job
 
 		w.WriteHeader(http.StatusAccepted)
 	}
