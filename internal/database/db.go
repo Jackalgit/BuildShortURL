@@ -232,7 +232,6 @@ func DeleteURLUser(ctx context.Context, userID uuid.UUID, deleteList []string) e
 		log.Printf("[PrepareContext] %s", err)
 	}
 	defer stmt.Close()
-
 	for _, shortURL := range deleteList {
 		shortURLKeyFull := fmt.Sprint(config.Config.BaseAddress, "/", shortURL)
 		fmt.Println(shortURLKeyFull)
@@ -243,43 +242,3 @@ func DeleteURLUser(ctx context.Context, userID uuid.UUID, deleteList []string) e
 	}
 	return nil
 }
-
-//func DeleteURLUser(ctx context.Context, userID uuid.UUID, deleteList []string) error {
-//
-//	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-//	defer cancel()
-//
-//	db, err := sql.Open("pgx", config.Config.DatabaseDSN)
-//	if err != nil {
-//		return fmt.Errorf("[Open DB] Не удалось установить соединение с базой данных: %q", err)
-//	}
-//
-//	tx, err := db.Begin()
-//	if err != nil {
-//		log.Printf("Ошибка начала транзакции: %q", err)
-//	}
-//
-//	query := `UPDATE storage SET deletedFlag = true WHERE shortURLKey = $1 AND userID = $2`
-//
-//	stmt, err := tx.PrepareContext(ctx, query)
-//	if err != nil {
-//		return fmt.Errorf("[PrepareContext] %s", err)
-//	}
-//	defer stmt.Close()
-//
-//	for _, shortURL := range deleteList {
-//		shortURLKeyFull := fmt.Sprint(config.Config.BaseAddress, "/", shortURL)
-//		fmt.Println(shortURLKeyFull)
-//		_, err = stmt.ExecContext(ctx, shortURLKeyFull, userID)
-//		if err != nil {
-//			log.Printf("[ExecContext] %q", err)
-//		}
-//		if err != nil {
-//			tx.Rollback()
-//			return fmt.Errorf("ошибка записи в базу: %q", err)
-//		}
-//	}
-//	tx.Commit()
-//
-//	return nil
-//}

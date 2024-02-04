@@ -6,7 +6,7 @@ www.ivan.run
 ###
 
 # @no-redirect
-GET http://localhost:8080/QOXOWjVChw
+GET http://localhost:8080/XXsdywRgme
 Content-Type: text/plain
 
 ###
@@ -47,6 +47,6 @@ Content-Type: application/json
 Cookie: token:
 
 
-[QOXOWjVChw, bDWleoZAEp, ZHMPFRMiOv, iEogtwLmnp, g, j, k, k, jk]
+[QOXOWjVChw, bDWleoZAEp, ZHMPFRMiOv, iEogtwLmnp, g, j, XXsdywRgme, k, jk]
 
 ###
