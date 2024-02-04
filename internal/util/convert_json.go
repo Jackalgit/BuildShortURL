@@ -37,9 +37,9 @@ func RequestListJSONToStruct(body io.Reader) ([]models.RequestBatch, error) {
 
 }
 
-func RequestListURLDelete(body io.Reader) ([]models.DeleteShortURL, error) {
+func RequestListURLDelete(body io.Reader) ([]string, error) {
 
-	var deleteList []models.DeleteShortURL
+	var deleteList []string
 
 	dec := json.NewDecoder(body)
 	if err := dec.Decode(&deleteList); err != nil {

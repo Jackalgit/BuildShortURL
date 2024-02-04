@@ -17,7 +17,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -379,22 +378,15 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		body, err := io.ReadAll(r.Body)
+		requestList, err := util.RequestListURLDelete(r.Body)
 		if err != nil {
 			http.Error(w, "Not read body", http.StatusBadRequest)
 			return
 		}
-		bodyString := string(body)[1:(len(string(body)) - 1)]
-		bodySlice := strings.Split(strings.ReplaceAll(bodyString, " ", ""), ",")
 
-		var stringSlice []string
-
-		for _, v := range bodySlice {
-			stringSlice = append(stringSlice, v[1:(len(v)-1)])
-		}
 		jobID := uuid.New()
 
-		job := jobertask.NewJober(s.Ctx, jobID, userID, stringSlice).DeleteURL()
+		job := jobertask.NewJober(s.Ctx, jobID, userID, requestList).DeleteURL()
 		jobertask.JobDict[jobID] = job
 
 		w.WriteHeader(http.StatusAccepted)
