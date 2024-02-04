@@ -379,18 +379,17 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		//requestListURLDelete, err := util.RequestListURLDelete(r.Body)
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Not read body", http.StatusBadRequest)
 			return
 		}
 		bodyString := string(body)[1:(len(string(body)) - 1)]
-		stringSlice := strings.Split(bodyString, ",")
+		stringSlice := strings.Split(strings.ReplaceAll(bodyString, " ", ""), ",")
 
 		jobID := uuid.New()
 
-		job := jobertask.NewJober(s.Ctx, jobID, userID, &stringSlice).DeleteURL()
+		job := jobertask.NewJober(s.Ctx, jobID, userID, stringSlice).DeleteURL()
 		jobertask.JobDict[jobID] = job
 
 		w.WriteHeader(http.StatusAccepted)

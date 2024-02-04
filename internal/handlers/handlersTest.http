@@ -41,10 +41,12 @@ Content-Type: application/json
 ]
 ###
 
+# @no-cookie-jar
 DELETE http://localhost:8080/api/user/urls
 Content-Type: application/json
 Cookie: token:
 
-[QOXOWjVChw, QOXOWjVCh]
+
+[QOXOWjVChw, QOXOWjVCh, ZHMPFRMiOv, iEogtwLmnp, g, j, k, k, jk]
 
 ###
