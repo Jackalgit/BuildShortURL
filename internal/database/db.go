@@ -234,7 +234,6 @@ func DeleteURLUser(ctx context.Context, userID uuid.UUID, deleteList []string) e
 	defer stmt.Close()
 	for _, shortURL := range deleteList {
 		shortURLKeyFull := fmt.Sprint(config.Config.BaseAddress, "/", shortURL)
-		fmt.Println(shortURLKeyFull)
 		_, err = stmt.ExecContext(ctx, shortURLKeyFull, userID)
 		if err != nil {
 			log.Printf("[ExecContext] %q", err)
