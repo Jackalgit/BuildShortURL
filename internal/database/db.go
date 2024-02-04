@@ -29,7 +29,7 @@ func NewDataBase(ctx context.Context) DataBase {
 		log.Printf("[Open DB] Не удалось установить соединение с базой данных: %q", err)
 	}
 
-	query := `CREATE TABLE IF NOT EXISTS storage (correlationId VARCHAR (255), userID VARCHAR (255), shortURLKey VARCHAR (255), originalURL VARCHAR (255), deletedFlag BOOLEAN DEFAULT true)`
+	query := `CREATE TABLE IF NOT EXISTS storage (correlationId VARCHAR (255), userID VARCHAR (255), shortURLKey VARCHAR (255), originalURL VARCHAR (255), deletedFlag BOOLEAN DEFAULT false)`
 
 	_, err = db.ExecContext(ctx, query)
 	if err != nil {
@@ -90,14 +90,14 @@ func (d DataBase) GetURL(ctx context.Context, userID uuid.UUID, shortURLKey stri
 		log.Printf("[row Scan] Не удалось преобразовать данные: %q", err)
 	}
 	if deletedFlag {
-		return nil, false, false
+		return nil, false, true
 	}
 
 	if originalURL.Valid {
 		log.Printf("Оригинальный УРЛ: %q", originalURL.String)
-		return []byte(originalURL.String), true, true
+		return []byte(originalURL.String), true, false
 	}
-	return nil, false, true
+	return nil, false, false
 
 }
 
@@ -230,7 +230,7 @@ func DeleteURLUser(ctx context.Context, userID uuid.UUID, deleteList []string) e
 		log.Printf("Ошибка начала транзакции: %q", err)
 	}
 
-	query := `UPDATE storage SET deletedFlag = false WHERE shortURLKey = $1 AND userID = $2`
+	query := `UPDATE storage SET deletedFlag = true WHERE shortURLKey = $1 AND userID = $2`
 
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
