@@ -385,8 +385,13 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		bodyString := string(body)[1:(len(string(body)) - 1)]
-		stringSlice := strings.Split(strings.ReplaceAll(bodyString, " ", ""), ",")
+		bodySlice := strings.Split(strings.ReplaceAll(bodyString, " ", ""), ",")
 
+		var stringSlice []string
+
+		for _, v := range bodySlice {
+			stringSlice = append(stringSlice, v[1:(len(v)-1)])
+		}
 		jobID := uuid.New()
 
 		job := jobertask.NewJober(s.Ctx, jobID, userID, stringSlice).DeleteURL()
