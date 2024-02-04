@@ -117,15 +117,17 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 	originalURL, found, deleteURL := s.Storage.GetURL(s.Ctx, userID, shortURLKeyFull)
 
 	logger.Log.Info("originalURL при GET запросе", zap.String("url", string(originalURL)))
-	if !deleteURL {
-		w.WriteHeader(http.StatusGone)
-		return
-	}
 
 	if !found {
 		http.Error(w, "originalURL not found", http.StatusNotFound)
 		return
 	}
+
+	if !deleteURL {
+		w.WriteHeader(http.StatusGone)
+		return
+	}
+
 	w.Header().Set("Location", string(originalURL))
 	w.WriteHeader(http.StatusTemporaryRedirect)
 
