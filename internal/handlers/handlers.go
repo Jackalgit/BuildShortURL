@@ -117,7 +117,7 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 	originalURL, found, deleteURL := s.Storage.GetURL(s.Ctx, userID, shortURLKeyFull)
 
 	logger.Log.Info("originalURL при GET запросе", zap.String("url", string(originalURL)))
-	if deleteURL {
+	if !deleteURL {
 		w.WriteHeader(http.StatusGone)
 		return
 	}
