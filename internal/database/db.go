@@ -217,7 +217,7 @@ func (d DataBase) UserURLList(ctx context.Context, userID uuid.UUID) ([]models.R
 
 func DeleteURLUser(ctx context.Context, userID uuid.UUID, deleteList []string) error {
 
-	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
 	db, err := sql.Open("pgx", config.Config.DatabaseDSN)
@@ -225,16 +225,11 @@ func DeleteURLUser(ctx context.Context, userID uuid.UUID, deleteList []string) e
 		return fmt.Errorf("[Open DB] Не удалось установить соединение с базой данных: %q", err)
 	}
 
-	tx, err := db.Begin()
-	if err != nil {
-		log.Printf("Ошибка начала транзакции: %q", err)
-	}
-
 	query := `UPDATE storage SET deletedFlag = true WHERE shortURLKey = $1 AND userID = $2`
 
-	stmt, err := tx.PrepareContext(ctx, query)
+	stmt, err := db.PrepareContext(ctx, query)
 	if err != nil {
-		return fmt.Errorf("[PrepareContext] %s", err)
+		log.Printf("[PrepareContext] %s", err)
 	}
 	defer stmt.Close()
 
@@ -245,20 +240,13 @@ func DeleteURLUser(ctx context.Context, userID uuid.UUID, deleteList []string) e
 		if err != nil {
 			log.Printf("[ExecContext] %q", err)
 		}
-		if err != nil {
-			tx.Rollback()
-			return fmt.Errorf("ошибка записи в базу: %q", err)
-		}
 	}
-	tx.Commit()
-
 	return nil
 }
 
 //func DeleteURLUser(ctx context.Context, userID uuid.UUID, deleteList []string) error {
-//	query := `INSERT INTO storage (userID, shortURLKey, originalURL) VALUES($1, $2, $3)`
 //
-//	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+//	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 //	defer cancel()
 //
 //	db, err := sql.Open("pgx", config.Config.DatabaseDSN)
@@ -266,26 +254,32 @@ func DeleteURLUser(ctx context.Context, userID uuid.UUID, deleteList []string) e
 //		return fmt.Errorf("[Open DB] Не удалось установить соединение с базой данных: %q", err)
 //	}
 //
-//	stmt, err := db.PrepareContext(ctx, query)
+//	tx, err := db.Begin()
 //	if err != nil {
-//		log.Printf("[PrepareContext] %s", err)
+//		log.Printf("Ошибка начала транзакции: %q", err)
+//	}
+//
+//	query := `UPDATE storage SET deletedFlag = true WHERE shortURLKey = $1 AND userID = $2`
+//
+//	stmt, err := tx.PrepareContext(ctx, query)
+//	if err != nil {
+//		return fmt.Errorf("[PrepareContext] %s", err)
 //	}
 //	defer stmt.Close()
 //
-//	_, err = stmt.ExecContext(ctx, userID, shortURLKey, originalURL)
-//	if err != nil {
-//		var pgErr *pgconn.PgError
-//		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-//			log.Printf("[Insert into DB] Не удалось сделать запись в базу данных: %q", err)
-//
-//			dupShortURLKey := d.GetShortURLinDB(ctx, originalURL)
-//
-//			AddURLError := models.NewAddURLError(dupShortURLKey)
-//
-//			return AddURLError
+//	for _, shortURL := range deleteList {
+//		shortURLKeyFull := fmt.Sprint(config.Config.BaseAddress, "/", shortURL)
+//		fmt.Println(shortURLKeyFull)
+//		_, err = stmt.ExecContext(ctx, shortURLKeyFull, userID)
+//		if err != nil {
+//			log.Printf("[ExecContext] %q", err)
+//		}
+//		if err != nil {
+//			tx.Rollback()
+//			return fmt.Errorf("ошибка записи в базу: %q", err)
 //		}
 //	}
+//	tx.Commit()
+//
 //	return nil
-//
-//
 //}
