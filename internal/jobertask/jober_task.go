@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	numWorkers       = 5
+	numWorkers       = 20
 	numBatchDataBase = 100
 )
 
