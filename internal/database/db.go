@@ -215,19 +215,19 @@ func (d DataBase) UserURLList(ctx context.Context, userID uuid.UUID) ([]models.R
 
 }
 
-func (d DataBase) DeleteURLUser(ctx context.Context, userID uuid.UUID, deleteList []string) error {
+func DeleteURLUser(ctx context.Context, userID uuid.UUID, deleteList []string) error {
 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
-	//db, err := sql.Open("pgx", config.Config.DatabaseDSN)
-	//if err != nil {
-	//	return fmt.Errorf("[Open DB] Не удалось установить соединение с базой данных: %q", err)
-	//}
+	db, err := sql.Open("pgx", config.Config.DatabaseDSN)
+	if err != nil {
+		return fmt.Errorf("[Open DB] Не удалось установить соединение с базой данных: %q", err)
+	}
 
 	query := `UPDATE storage SET deletedFlag = true WHERE shortURLKey = $1 AND userID = $2`
 
-	stmt, err := d.conn.PrepareContext(ctx, query)
+	stmt, err := db.PrepareContext(ctx, query)
 	if err != nil {
 		log.Printf("[PrepareContext] %s", err)
 	}
