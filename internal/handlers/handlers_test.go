@@ -25,7 +25,7 @@ func TestShortURL_GetURL(t *testing.T) {
 
 	dictURL.AddURL(ctx, userID, "/qweQWErtyQ", []byte("long long long url"))
 
-	s := ShortURL{Ctx: ctx, Storage: dictURL}
+	s := ShortURL{Storage: dictURL}
 
 	tokenString := util.BuildJWTString(userID)
 	cookie := http.Cookie{Name: "token", Value: tokenString}
@@ -67,7 +67,7 @@ func TestShortURL_GetURL(t *testing.T) {
 func TestShortURL_MakeShortURL(t *testing.T) {
 	ctx := context.Background()
 	dictURL := dicturl.NewDictURL()
-	s := ShortURL{Ctx: ctx, Storage: dictURL}
+	s := ShortURL{Storage: dictURL}
 
 	userID := uuid.New()
 	tokenString := util.BuildJWTString(userID)
@@ -131,7 +131,7 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 func TestShortURL_JSONShortURL(t *testing.T) {
 	ctx := context.Background()
 	dictURL := dicturl.NewDictURL()
-	s := ShortURL{Ctx: ctx, Storage: dictURL}
+	s := ShortURL{Storage: dictURL}
 
 	userID := uuid.New()
 	tokenString := util.BuildJWTString(userID)
