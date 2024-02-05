@@ -1,4 +1,4 @@
-package util
+package filestorage
 
 import (
 	"encoding/json"

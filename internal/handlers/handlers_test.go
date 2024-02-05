@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	dicturl "github.com/Jackalgit/BuildShortURL/internal/dictURL"
+	"github.com/Jackalgit/BuildShortURL/internal/jwt"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
-	"github.com/Jackalgit/BuildShortURL/internal/util"
 	"github.com/go-resty/resty/v2"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -27,7 +27,7 @@ func TestShortURL_GetURL(t *testing.T) {
 
 	s := ShortURL{Storage: dictURL}
 
-	tokenString := util.BuildJWTString(userID)
+	tokenString := jwt.BuildJWTString(userID)
 	cookie := http.Cookie{Name: "token", Value: tokenString}
 
 	tests := []struct {
@@ -70,7 +70,7 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 	s := ShortURL{Storage: dictURL}
 
 	userID := uuid.New()
-	tokenString := util.BuildJWTString(userID)
+	tokenString := jwt.BuildJWTString(userID)
 	cookie := http.Cookie{Name: "token", Value: tokenString}
 
 	tests := []struct {
@@ -134,7 +134,7 @@ func TestShortURL_JSONShortURL(t *testing.T) {
 	s := ShortURL{Storage: dictURL}
 
 	userID := uuid.New()
-	tokenString := util.BuildJWTString(userID)
+	tokenString := jwt.BuildJWTString(userID)
 	cookie := http.Cookie{Name: "token", Value: tokenString}
 
 	handler := http.HandlerFunc(s.JSONShortURL)

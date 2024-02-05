@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
+	"github.com/Jackalgit/BuildShortURL/internal/filestorage"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
-	"github.com/Jackalgit/BuildShortURL/internal/util"
 	"github.com/google/uuid"
 )
 
@@ -32,30 +32,30 @@ func (d DictURL) AddURL(ctx context.Context, userID uuid.UUID, shortURLKey strin
 		userDictURL[shortURLKey] = originalURL
 	}
 
-	util.SaveURLToJSONFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
+	filestorage.SaveURLToJSONFile(config.Config.FileStoragePath, string(originalURL), shortURLKey)
 
 	return nil
 
 }
 
-func (d DictURL) GetURL(ctx context.Context, userID uuid.UUID, shortURLKey string) ([]byte, bool, bool) {
+func (d DictURL) GetURL(ctx context.Context, userID uuid.UUID, shortURLKey string) ([]byte, models.StatusURL) {
 
 	userDictURL, foundDictUser := d[userID]
 	if !foundDictUser {
 		for _, dictUser := range d {
 			for short, origin := range dictUser {
 				if short == shortURLKey {
-					return origin, true, false
+					return origin, models.NewStatusURL(true, false)
 				}
 			}
 		}
 
-		return nil, foundDictUser, false
+		return nil, models.NewStatusURL(false, false)
 	}
 
-	origin, foundShortURLKey := userDictURL[shortURLKey]
+	origin := userDictURL[shortURLKey]
 
-	return origin, foundShortURLKey, false
+	return origin, models.NewStatusURL(true, false)
 
 }
 
@@ -80,7 +80,7 @@ func (d DictURL) AddBatchURL(ctx context.Context, userID uuid.UUID, batchList []
 		}
 	}
 
-	util.SaveListURLToJSONFile(config.Config.FileStoragePath, batchList)
+	filestorage.SaveListURLToJSONFile(config.Config.FileStoragePath, batchList)
 
 	return nil
 

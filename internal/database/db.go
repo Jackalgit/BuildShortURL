@@ -74,7 +74,7 @@ func (d DataBase) AddURL(ctx context.Context, userID uuid.UUID, shortURLKey stri
 
 }
 
-func (d DataBase) GetURL(ctx context.Context, userID uuid.UUID, shortURLKey string) ([]byte, bool, bool) {
+func (d DataBase) GetURL(ctx context.Context, userID uuid.UUID, shortURLKey string) ([]byte, models.StatusURL) {
 
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
@@ -93,14 +93,14 @@ func (d DataBase) GetURL(ctx context.Context, userID uuid.UUID, shortURLKey stri
 		log.Printf("[row Scan] Не удалось преобразовать данные: %q", err)
 	}
 	if deletedFlag {
-		return nil, false, true
+		return nil, models.NewStatusURL(false, true)
 	}
 
 	if originalURL.Valid {
 		log.Printf("Оригинальный УРЛ: %q", originalURL.String)
-		return []byte(originalURL.String), true, false
+		return []byte(originalURL.String), models.NewStatusURL(true, false)
 	}
-	return nil, false, false
+	return nil, models.NewStatusURL(false, false)
 
 }
 

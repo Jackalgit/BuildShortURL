@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	"github.com/Jackalgit/BuildShortURL/internal/jobertask"
+	"github.com/Jackalgit/BuildShortURL/internal/jsonDecoder"
+	"github.com/Jackalgit/BuildShortURL/internal/jwt"
 	"github.com/Jackalgit/BuildShortURL/internal/logger"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/Jackalgit/BuildShortURL/internal/userid"
@@ -23,7 +25,7 @@ import (
 
 type Repository interface {
 	AddURL(ctx context.Context, userID uuid.UUID, shortURLKey string, originalURL []byte) error
-	GetURL(ctx context.Context, userID uuid.UUID, shortURLKey string) ([]byte, bool, bool)
+	GetURL(ctx context.Context, userID uuid.UUID, shortURLKey string) ([]byte, models.StatusURL)
 	AddBatchURL(ctx context.Context, userID uuid.UUID, batchList []models.BatchURL) error
 	UserURLList(ctx context.Context, userID uuid.UUID) ([]models.ResponseUserURL, bool, error)
 }
@@ -48,7 +50,7 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cookieStr := cookie.Value
-	userID, err := util.GetUserID(cookieStr)
+	userID, err := jwt.GetUserID(cookieStr)
 	if err != nil {
 		http.Error(w, "[MakeShortURL] Token is not valid", http.StatusUnauthorized)
 		return
@@ -101,7 +103,7 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cookieStr := cookie.Value
-	userID, err := util.GetUserID(cookieStr)
+	userID, err := jwt.GetUserID(cookieStr)
 	if err != nil {
 		http.Error(w, "[MakeShortURL] Token is not valid", http.StatusUnauthorized)
 		return
@@ -123,14 +125,15 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	originalURL, found, deleteURL := s.Storage.GetURL(ctx, userID, shortURLKeyFull)
+	originalURL, status := s.Storage.GetURL(ctx, userID, shortURLKeyFull)
 
 	logger.Log.Info("originalURL при GET запросе", zap.String("url", string(originalURL)))
-	if deleteURL {
+
+	if status.Delete {
 		http.Error(w, "originalURL not found", http.StatusGone)
 		return
 	}
-	if !found {
+	if !status.Found {
 		http.Error(w, "originalURL not found", http.StatusNotFound)
 		return
 	}
@@ -153,7 +156,7 @@ func (s *ShortURL) JSONShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cookieStr := cookie.Value
-	userID, err := util.GetUserID(cookieStr)
+	userID, err := jwt.GetUserID(cookieStr)
 	if err != nil {
 		http.Error(w, "[MakeShortURL] Token is not valid", http.StatusUnauthorized)
 		return
@@ -163,7 +166,7 @@ func (s *ShortURL) JSONShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	request, err := util.RequestJSONToStruct(r.Body)
+	request, err := jsonDecoder.RequestJSONToStruct(r.Body)
 	if err != nil {
 		http.Error(w, "Not read body", http.StatusBadRequest)
 		return
@@ -240,7 +243,7 @@ func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cookieStr := cookie.Value
-	userID, err := util.GetUserID(cookieStr)
+	userID, err := jwt.GetUserID(cookieStr)
 	if err != nil {
 		http.Error(w, "[MakeShortURL] Token is not valid", http.StatusUnauthorized)
 		return
@@ -250,7 +253,7 @@ func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requestList, err := util.RequestListJSONToStruct(r.Body)
+	requestList, err := jsonDecoder.RequestListJSONToStruct(r.Body)
 	if err != nil {
 		http.Error(w, "Not read body", http.StatusBadRequest)
 		return
@@ -312,7 +315,7 @@ func (s *ShortURL) TokenMiddleware(next http.Handler) http.Handler {
 		// добываем значение токена, а из него userId.
 		// если токен не валидный, то генерируем новый токен и возвращаем его клиенту
 		cookieStr := cookie.Value
-		userID, err := util.GetUserID(cookieStr)
+		userID, err := jwt.GetUserID(cookieStr)
 		if err != nil {
 			s.SetCookie(w, r)
 			next.ServeHTTP(w, r)
@@ -339,7 +342,7 @@ func (s *ShortURL) TokenMiddleware(next http.Handler) http.Handler {
 func (s *ShortURL) SetCookie(w http.ResponseWriter, r *http.Request) {
 	id := uuid.New()
 
-	tokenString := util.BuildJWTString(id)
+	tokenString := jwt.BuildJWTString(id)
 	s.DictUserIDToken.AddUserID(id, tokenString)
 
 	cookie := http.Cookie{Name: "token", Value: tokenString}
@@ -358,7 +361,7 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		cookieStr := cookie.Value
-		userID, err := util.GetUserID(cookieStr)
+		userID, err := jwt.GetUserID(cookieStr)
 		if err != nil {
 			http.Error(w, "[MakeShortURL] Token is not valid", http.StatusUnauthorized)
 			return
@@ -400,7 +403,7 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		cookieStr := cookie.Value
-		userID, err := util.GetUserID(cookieStr)
+		userID, err := jwt.GetUserID(cookieStr)
 		if err != nil {
 			http.Error(w, "[MakeShortURL] Token is not valid", http.StatusUnauthorized)
 			return
@@ -410,7 +413,7 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		requestList, err := util.RequestListURLDelete(r.Body)
+		requestList, err := jsonDecoder.RequestListURLDelete(r.Body)
 		if err != nil {
 			http.Error(w, "Not read body", http.StatusBadRequest)
 			return
