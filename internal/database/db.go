@@ -19,9 +19,9 @@ type DataBase struct {
 	conn *sql.DB
 }
 
-func NewDataBase(ctx context.Context) DataBase {
+func NewDataBase() DataBase {
 
-	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
 	db, err := sql.Open("pgx", config.Config.DatabaseDSN)

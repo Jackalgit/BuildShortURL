@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
@@ -27,7 +26,7 @@ func main() {
 	//зависают тесты на первом инкременте
 	//stop := make(chan os.Signal, 1)
 	//signal.Notify(stop, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
-	ctx := context.Background()
+	//ctx := context.Background()
 	//ctx, _ := signal.NotifyContext(
 	//	context.Background(),
 	//	syscall.SIGINT,
@@ -37,13 +36,13 @@ func main() {
 
 	flag.Parse()
 
-	if err := runServer(ctx); err != nil {
+	if err := runServer(); err != nil {
 		log.Println("runServer ERROR: ", err)
 	}
 
 }
 
-func runServer(ctx context.Context) error {
+func runServer() error {
 
 	if err := logger.Initialize(config.Config.LogLevel); err != nil {
 		return err
@@ -51,7 +50,7 @@ func runServer(ctx context.Context) error {
 
 	logger.Log.Info("Running server", zap.String("address", config.Config.ServerPort))
 
-	storage := initialization.InitStorage(ctx)
+	storage := initialization.InitStorage()
 
 	router := mux.NewRouter()
 

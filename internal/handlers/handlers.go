@@ -28,7 +28,6 @@ type Repository interface {
 }
 
 type ShortURL struct {
-	Ctx             context.Context
 	Storage         Repository
 	DictUserIDToken userid.DictUserIDToken
 }
@@ -69,7 +68,9 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 	shortURLKey := util.GenerateKey()
 	shortURLKeyFull := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
 
-	if err := s.Storage.AddURL(s.Ctx, userID, shortURLKeyFull, originalURL); err != nil {
+	ctx := r.Context()
+
+	if err := s.Storage.AddURL(ctx, userID, shortURLKeyFull, originalURL); err != nil {
 		w.Header().Set("Content-type", "text/plain")
 		w.WriteHeader(http.StatusConflict)
 		w.Write([]byte(err.Error()))
@@ -113,7 +114,9 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 
 	shortURLKeyFull := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
 
-	originalURL, found, deleteURL := s.Storage.GetURL(s.Ctx, userID, shortURLKeyFull)
+	ctx := r.Context()
+
+	originalURL, found, deleteURL := s.Storage.GetURL(ctx, userID, shortURLKeyFull)
 
 	logger.Log.Info("originalURL при GET запросе", zap.String("url", string(originalURL)))
 	if deleteURL {
@@ -163,7 +166,9 @@ func (s *ShortURL) JSONShortURL(w http.ResponseWriter, r *http.Request) {
 
 	shortURLKeyFull := fmt.Sprint(config.Config.BaseAddress, "/", shortURLKey)
 
-	if err := s.Storage.AddURL(s.Ctx, userID, shortURLKeyFull, []byte(originalURL)); err != nil {
+	ctx := r.Context()
+
+	if err := s.Storage.AddURL(ctx, userID, shortURLKeyFull, []byte(originalURL)); err != nil {
 		respons := models.Response{
 			Result: err.Error(),
 		}
@@ -205,8 +210,8 @@ func (s *ShortURL) PingDB(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	//ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
-	ctx, cancel := context.WithTimeout(s.Ctx, 1*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
+	//ctx, cancel := context.WithTimeout(s.Ctx, 1*time.Second)
 	defer cancel()
 	if err := db.PingContext(ctx); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -259,7 +264,9 @@ func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 		batchList = append(batchList, batchURL)
 	}
 
-	if err := s.Storage.AddBatchURL(s.Ctx, userID, batchList); err != nil {
+	ctx := r.Context()
+
+	if err := s.Storage.AddBatchURL(ctx, userID, batchList); err != nil {
 		w.Header().Set("Content-type", "text/plain")
 		w.WriteHeader(http.StatusConflict)
 		w.Write([]byte(err.Error()))
@@ -345,7 +352,9 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		userURLList, foundDictUser := s.Storage.UserURLList(s.Ctx, userID)
+		ctx := r.Context()
+
+		userURLList, foundDictUser := s.Storage.UserURLList(ctx, userID)
 		if !foundDictUser {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
@@ -386,7 +395,9 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 
 		jobID := uuid.New()
 
-		job := jobertask.NewJober(s.Ctx, jobID, userID, requestList).DeleteURL()
+		ctx := r.Context()
+
+		job := jobertask.NewJober(ctx, jobID, userID, requestList).DeleteURL()
 		jobertask.JobDict[jobID] = job
 
 		w.WriteHeader(http.StatusAccepted)

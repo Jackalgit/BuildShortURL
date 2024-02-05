@@ -1,7 +1,6 @@
 package initialization
 
 import (
-	"context"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	"github.com/Jackalgit/BuildShortURL/internal/database"
 	dicturl "github.com/Jackalgit/BuildShortURL/internal/dictURL"
@@ -9,18 +8,16 @@ import (
 	"github.com/Jackalgit/BuildShortURL/internal/userid"
 )
 
-func InitStorage(ctx context.Context) *handlers.ShortURL {
+func InitStorage() *handlers.ShortURL {
 
 	if config.Config.DatabaseDSN != "" {
 		return &handlers.ShortURL{
-			Ctx:             ctx,
-			Storage:         database.NewDataBase(ctx),
+			Storage:         database.NewDataBase(),
 			DictUserIDToken: userid.NewDictUserIDToken(),
 		}
 	}
 
 	return &handlers.ShortURL{
-		Ctx:             ctx,
 		Storage:         dicturl.NewDictURL(),
 		DictUserIDToken: userid.NewDictUserIDToken(),
 	}
