@@ -111,7 +111,7 @@ func (d DataBase) AddBatchURL(ctx context.Context, userID uuid.UUID, batchList [
 
 	tx, err := d.conn.Begin()
 	if err != nil {
-		return fmt.Errorf("Ошибка начала транзакции: %q", err)
+		return fmt.Errorf("ошибка начала транзакции: %q", err)
 	}
 	defer tx.Rollback()
 
@@ -149,7 +149,7 @@ func (d DataBase) AddBatchURL(ctx context.Context, userID uuid.UUID, batchList [
 		}
 
 		if err != nil {
-			return fmt.Errorf("Ошибка записи в базу: %q", err)
+			return fmt.Errorf("ошибка записи в базу: %q", err)
 		}
 	}
 	tx.Commit()

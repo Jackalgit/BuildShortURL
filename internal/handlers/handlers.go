@@ -44,12 +44,14 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("token")
 
 	if errors.Is(err, http.ErrNoCookie) {
-		log.Println("[MakeShortURL] No Cookie:", err)
+		http.Error(w, "[MakeShortURL] No Cookie", http.StatusUnauthorized)
+		return
 	}
 	cookieStr := cookie.Value
 	userID, err := util.GetUserID(cookieStr)
 	if err != nil {
-		log.Println("[MakeShortURL] Token is not valid", err)
+		http.Error(w, "[MakeShortURL] Token is not valid", http.StatusUnauthorized)
+		return
 	}
 	if userID.String() == "" {
 		http.Error(w, "No User ID in token", http.StatusUnauthorized)
@@ -95,12 +97,14 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("token")
 
 	if errors.Is(err, http.ErrNoCookie) {
-		log.Println("[GetURL] No Cookie:", err)
+		http.Error(w, "[MakeShortURL] No Cookie", http.StatusUnauthorized)
+		return
 	}
 	cookieStr := cookie.Value
 	userID, err := util.GetUserID(cookieStr)
 	if err != nil {
-		log.Println("[GetURL] Token is not valid", err)
+		http.Error(w, "[MakeShortURL] Token is not valid", http.StatusUnauthorized)
+		return
 	}
 	if userID.String() == "" {
 		http.Error(w, "No User ID in token", http.StatusUnauthorized)
@@ -145,12 +149,14 @@ func (s *ShortURL) JSONShortURL(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("token")
 
 	if errors.Is(err, http.ErrNoCookie) {
-		log.Println("[JSONShortURL] No Cookie:", err)
+		http.Error(w, "[MakeShortURL] No Cookie", http.StatusUnauthorized)
+		return
 	}
 	cookieStr := cookie.Value
 	userID, err := util.GetUserID(cookieStr)
 	if err != nil {
-		log.Println("[JSONShortURL] Token is not valid", err)
+		http.Error(w, "[MakeShortURL] Token is not valid", http.StatusUnauthorized)
+		return
 	}
 	if userID.String() == "" {
 		http.Error(w, "No User ID in token", http.StatusUnauthorized)
@@ -230,12 +236,14 @@ func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("token")
 
 	if errors.Is(err, http.ErrNoCookie) {
-		log.Println("[Batch] No Cookie:", err)
+		http.Error(w, "[MakeShortURL] No Cookie", http.StatusUnauthorized)
+		return
 	}
 	cookieStr := cookie.Value
 	userID, err := util.GetUserID(cookieStr)
 	if err != nil {
-		log.Println("[Batch] Token is not valid", err)
+		http.Error(w, "[MakeShortURL] Token is not valid", http.StatusUnauthorized)
+		return
 	}
 	if userID.String() == "" {
 		http.Error(w, "No User ID in token", http.StatusUnauthorized)
@@ -346,14 +354,15 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("token")
 
 		if errors.Is(err, http.ErrNoCookie) {
-			log.Println("[UserDictURL] No Cookie:", err)
+			http.Error(w, "[MakeShortURL] No Cookie", http.StatusUnauthorized)
+			return
 		}
 		cookieStr := cookie.Value
 		userID, err := util.GetUserID(cookieStr)
 		if err != nil {
-			log.Println("[UserDictURL] Token is not valid", err)
+			http.Error(w, "[MakeShortURL] Token is not valid", http.StatusUnauthorized)
+			return
 		}
-
 		if userID.String() == "" {
 			http.Error(w, "No User ID in token", http.StatusUnauthorized)
 			return
@@ -387,12 +396,14 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("token")
 
 		if errors.Is(err, http.ErrNoCookie) {
-			log.Println("[UserDictURL] No Cookie:", err)
+			http.Error(w, "[MakeShortURL] No Cookie", http.StatusUnauthorized)
+			return
 		}
 		cookieStr := cookie.Value
 		userID, err := util.GetUserID(cookieStr)
 		if err != nil {
-			log.Println("[UserDictURL] Token is not valid", err)
+			http.Error(w, "[MakeShortURL] Token is not valid", http.StatusUnauthorized)
+			return
 		}
 		if userID.String() == "" {
 			http.Error(w, "No User ID in token", http.StatusUnauthorized)
