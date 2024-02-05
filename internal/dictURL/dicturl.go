@@ -86,11 +86,11 @@ func (d DictURL) AddBatchURL(ctx context.Context, userID uuid.UUID, batchList []
 
 }
 
-func (d DictURL) UserURLList(ctx context.Context, userID uuid.UUID) ([]models.ResponseUserURL, bool) {
+func (d DictURL) UserURLList(ctx context.Context, userID uuid.UUID) ([]models.ResponseUserURL, bool, error) {
 
 	userDictURL, foundDictUser := d[userID]
 	if !foundDictUser {
-		return nil, foundDictUser
+		return nil, foundDictUser, nil
 	}
 
 	var responseUserURLList []models.ResponseUserURL
@@ -106,6 +106,6 @@ func (d DictURL) UserURLList(ctx context.Context, userID uuid.UUID) ([]models.Re
 
 	}
 
-	return responseUserURLList, true
+	return responseUserURLList, true, nil
 
 }

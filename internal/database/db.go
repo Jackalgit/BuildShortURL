@@ -50,7 +50,7 @@ func (d DataBase) AddURL(ctx context.Context, userID uuid.UUID, shortURLKey stri
 
 	stmt, err := d.conn.PrepareContext(ctx, query)
 	if err != nil {
-		log.Printf("[PrepareContext] %s", err)
+		return fmt.Errorf("[PrepareContext] %s", err)
 	}
 	defer stmt.Close()
 
@@ -58,9 +58,12 @@ func (d DataBase) AddURL(ctx context.Context, userID uuid.UUID, shortURLKey stri
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-			log.Printf("[Insert into DB] Не удалось сделать запись в базу данных: %q", err)
 
-			dupShortURLKey := d.GetShortURLinDB(ctx, originalURL)
+			dupShortURLKey, err := d.GetShortURLinDB(ctx, originalURL)
+			if err != nil {
+				return fmt.Errorf("[GetShortURLinDB] %s", err)
+
+			}
 
 			AddURLError := models.NewAddURLError(dupShortURLKey)
 
@@ -108,14 +111,15 @@ func (d DataBase) AddBatchURL(ctx context.Context, userID uuid.UUID, batchList [
 
 	tx, err := d.conn.Begin()
 	if err != nil {
-		log.Printf("Ошибка начала транзакции: %q", err)
+		return fmt.Errorf("Ошибка начала транзакции: %q", err)
 	}
+	defer tx.Rollback()
 
 	query := `INSERT INTO storage (correlationId, userID, shortURLKey, originalURL) VALUES($1, $2, $3, $4)`
 
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
-		log.Printf("[PrepareContext] %s", err)
+		return fmt.Errorf("[PrepareContext] %s", err)
 	}
 	defer stmt.Close()
 
@@ -132,7 +136,11 @@ func (d DataBase) AddBatchURL(ctx context.Context, userID uuid.UUID, batchList [
 			if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
 				log.Printf("[Insert into DB] Не удалось сделать запись в базу данных: %q", err)
 
-				dupShortURLKey := d.GetShortURLinDB(ctx, []byte(v.OriginalURL))
+				dupShortURLKey, err := d.GetShortURLinDB(ctx, []byte(v.OriginalURL))
+
+				if err != nil {
+					return fmt.Errorf("[GetShortURLinDB] %s", err)
+				}
 
 				AddURLError := models.NewAddURLError(dupShortURLKey)
 
@@ -141,16 +149,16 @@ func (d DataBase) AddBatchURL(ctx context.Context, userID uuid.UUID, batchList [
 		}
 
 		if err != nil {
-			tx.Rollback()
-			log.Printf("Ошибка записи в базу: %q", err)
+			return fmt.Errorf("Ошибка записи в базу: %q", err)
 		}
 	}
 	tx.Commit()
+
 	return nil
 
 }
 
-func (d DataBase) GetShortURLinDB(ctx context.Context, originalURL []byte) string {
+func (d DataBase) GetShortURLinDB(ctx context.Context, originalURL []byte) (string, error) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
@@ -162,21 +170,24 @@ func (d DataBase) GetShortURLinDB(ctx context.Context, originalURL []byte) strin
 	var shortURLKey sql.NullString
 	err := row.Scan(&shortURLKey)
 	if err != nil {
-		log.Printf("[row Scan] Не удалось преобразовать данные: %q", err)
+		return "", fmt.Errorf("[row Scan] Не удалось преобразовать данные: %q", err)
 	}
 
 	if shortURLKey.Valid {
 		log.Printf("Оригинальный УРЛ: %q", shortURLKey.String)
-		return shortURLKey.String
+		return shortURLKey.String, nil
 	}
 
-	return ""
+	return "", nil
 
 }
 
-func (d DataBase) UserURLList(ctx context.Context, userID uuid.UUID) ([]models.ResponseUserURL, bool) {
+func (d DataBase) UserURLList(ctx context.Context, userID uuid.UUID) ([]models.ResponseUserURL, bool, error) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
+
+	var userURLList []models.ResponseUserURL
+	var userURL models.ResponseUserURL
 
 	rows, err := d.conn.QueryContext(
 		ctx,
@@ -184,18 +195,15 @@ func (d DataBase) UserURLList(ctx context.Context, userID uuid.UUID) ([]models.R
 		userID,
 	)
 	if err != nil {
-		log.Printf("[QueryContext] Не удалось получить данные по userId: %q", err)
+		return nil, false, fmt.Errorf("[QueryContext] Не удалось получить данные по userId: %q", err)
 	}
 	defer rows.Close()
-
-	var userURLList []models.ResponseUserURL
-	var userURL models.ResponseUserURL
 
 	for rows.Next() {
 
 		err = rows.Scan(&userURL.ShortURL, &userURL.OriginalURL)
 		if err != nil {
-			log.Printf("[rows Scan] Не удалось преобразовать данные: %q", err)
+			return nil, false, fmt.Errorf("[rows Scan] Не удалось преобразовать данные: %q", err)
 		}
 
 		userURLList = append(userURLList, userURL)
@@ -203,15 +211,15 @@ func (d DataBase) UserURLList(ctx context.Context, userID uuid.UUID) ([]models.R
 	// проверяем на ошибки
 	err = rows.Err()
 	if err != nil {
-		log.Printf("[rows Err]: %q", err)
+		return nil, false, fmt.Errorf("[rows Err]: %q", err)
 	}
 
 	// если список пустой, то в базе нет записей
 	if len(userURLList) == 0 {
-		return userURLList, false
+		return userURLList, false, nil
 	}
 
-	return userURLList, true
+	return userURLList, true, nil
 
 }
 

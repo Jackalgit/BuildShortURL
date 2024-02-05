@@ -25,7 +25,7 @@ type Repository interface {
 	AddURL(ctx context.Context, userID uuid.UUID, shortURLKey string, originalURL []byte) error
 	GetURL(ctx context.Context, userID uuid.UUID, shortURLKey string) ([]byte, bool, bool)
 	AddBatchURL(ctx context.Context, userID uuid.UUID, batchList []models.BatchURL) error
-	UserURLList(ctx context.Context, userID uuid.UUID) ([]models.ResponseUserURL, bool)
+	UserURLList(ctx context.Context, userID uuid.UUID) ([]models.ResponseUserURL, bool, error)
 }
 
 type ShortURL struct {
@@ -361,7 +361,11 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 
 		ctx := r.Context()
 
-		userURLList, foundDictUser := s.Storage.UserURLList(ctx, userID)
+		userURLList, foundDictUser, err := s.Storage.UserURLList(ctx, userID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		if !foundDictUser {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
