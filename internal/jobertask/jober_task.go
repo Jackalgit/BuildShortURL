@@ -2,7 +2,7 @@ package jobertask
 
 import (
 	"context"
-	"github.com/Jackalgit/BuildShortURL/internal/database"
+	"github.com/Jackalgit/BuildShortURL/internal/handlers"
 	"github.com/google/uuid"
 	"log"
 	"sync"
@@ -31,7 +31,7 @@ func NewJober(ctx context.Context, jobID uuid.UUID, userID uuid.UUID, taskList [
 	}
 }
 
-func (j *Job) DeleteURL() *Job {
+func (j *Job) DeleteURL(s *handlers.ShortURL) *Job {
 
 	// запускаем принятую работу в отдельной горутине для возвращения в хендлер и и отдачи ответа клиенту
 	go func() {
@@ -43,7 +43,7 @@ func (j *Job) DeleteURL() *Job {
 		// пишем входные данные в канал
 		inputCh := Generator(doneCh, j.TaskList)
 		// запускаем толпу рабочих дербанить канал
-		fanOut(j.Ctx, &wg, doneCh, j.UserID, inputCh)
+		fanOut(j.Ctx, &wg, doneCh, s, j.UserID, inputCh)
 
 		wg.Wait()
 
@@ -70,14 +70,14 @@ func Generator(doneCh chan struct{}, input []string) chan string {
 	return inputCh
 }
 
-func fanOut(ctx context.Context, wg *sync.WaitGroup, doneCh chan struct{}, userID uuid.UUID, inputCh chan string) {
+func fanOut(ctx context.Context, wg *sync.WaitGroup, doneCh chan struct{}, s *handlers.ShortURL, userID uuid.UUID, inputCh chan string) {
 
 	for i := 0; i < numWorkers; i++ {
-		Worker(ctx, wg, doneCh, userID, inputCh)
+		Worker(ctx, wg, doneCh, s, userID, inputCh)
 	}
 }
 
-func Worker(ctx context.Context, wg *sync.WaitGroup, doneCh chan struct{}, userID uuid.UUID, inputCh chan string) {
+func Worker(ctx context.Context, wg *sync.WaitGroup, doneCh chan struct{}, s *handlers.ShortURL, userID uuid.UUID, inputCh chan string) {
 
 	var deleteList []string
 
@@ -94,7 +94,7 @@ func Worker(ctx context.Context, wg *sync.WaitGroup, doneCh chan struct{}, userI
 			default:
 				deleteList = append(deleteList, data)
 				if len(deleteList) == numBatchDataBase {
-					err := database.DeleteURLUser(ctx, userID, deleteList)
+					err := s.Storage.DeleteURLUser(ctx, userID, deleteList)
 					if err != nil {
 						log.Println("[DeleteURLUser]", err)
 						return
@@ -103,7 +103,7 @@ func Worker(ctx context.Context, wg *sync.WaitGroup, doneCh chan struct{}, userI
 			}
 		}
 		// дописываем остатки которые не вошли в numBatchDataBase
-		err := database.DeleteURLUser(ctx, userID, deleteList)
+		err := s.Storage.DeleteURLUser(ctx, userID, deleteList)
 		if err != nil {
 			log.Println("[DeleteURLUser]", err)
 			return

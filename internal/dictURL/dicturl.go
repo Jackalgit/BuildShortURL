@@ -109,3 +109,7 @@ func (d DictURL) UserURLList(ctx context.Context, userID uuid.UUID) ([]models.Re
 	return responseUserURLList, true
 
 }
+
+func (d DictURL) DeleteURLUser(ctx context.Context, userID uuid.UUID, deleteList []string) error {
+	return fmt.Errorf("При запуске сервиса необходимо выбрать вид хранения DataBase")
+}

@@ -25,6 +25,7 @@ type Repository interface {
 	GetURL(ctx context.Context, userID uuid.UUID, shortURLKey string) ([]byte, bool, bool)
 	AddBatchURL(ctx context.Context, userID uuid.UUID, batchList []models.BatchURL) error
 	UserURLList(ctx context.Context, userID uuid.UUID) ([]models.ResponseUserURL, bool)
+	DeleteURLUser(ctx context.Context, userID uuid.UUID, deleteList []string) error
 }
 
 type ShortURL struct {
@@ -364,6 +365,11 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodDelete {
 
+		if config.Config.DatabaseDSN == "" {
+			http.Error(w, "DataBase не определена при запуске сервиса", http.StatusInternalServerError)
+			return
+		}
+
 		cookie, err := r.Cookie("token")
 		if err == http.ErrNoCookie {
 			log.Println("[UserDictURL] No Cookie:", err)
@@ -386,7 +392,7 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 
 		jobID := uuid.New()
 
-		job := jobertask.NewJober(s.Ctx, jobID, userID, requestList).DeleteURL()
+		job := jobertask.NewJober(s.Ctx, jobID, userID, requestList).DeleteURL(s)
 		jobertask.JobDict[jobID] = job
 
 		w.WriteHeader(http.StatusAccepted)
