@@ -395,9 +395,7 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 
 		jobID := uuid.New()
 
-		ctx := r.Context()
-
-		job := jobertask.NewJober(ctx, jobID, userID, requestList).DeleteURL()
+		job := jobertask.NewJober(jobID, userID, requestList).DeleteURL()
 		jobertask.JobDict[jobID] = job
 
 		w.WriteHeader(http.StatusAccepted)

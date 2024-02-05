@@ -215,9 +215,9 @@ func (d DataBase) UserURLList(ctx context.Context, userID uuid.UUID) ([]models.R
 
 }
 
-func DeleteURLUser(ctx context.Context, userID uuid.UUID, deleteList []string) error {
+func DeleteURLUser(userID uuid.UUID, deleteList []string) error {
 
-	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	db, err := sql.Open("pgx", config.Config.DatabaseDSN)
