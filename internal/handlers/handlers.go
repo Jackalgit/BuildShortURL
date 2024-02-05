@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	"github.com/Jackalgit/BuildShortURL/internal/jobertask"
-	"github.com/Jackalgit/BuildShortURL/internal/jsonDecoder"
+	"github.com/Jackalgit/BuildShortURL/internal/jsondecoder"
 	"github.com/Jackalgit/BuildShortURL/internal/jwt"
 	"github.com/Jackalgit/BuildShortURL/internal/logger"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
@@ -130,7 +130,7 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 	logger.Log.Info("originalURL при GET запросе", zap.String("url", string(originalURL)))
 
 	if status.Delete {
-		http.Error(w, "originalURL not found", http.StatusGone)
+		http.Error(w, "originalURL delete", http.StatusGone)
 		return
 	}
 	if !status.Found {
@@ -166,7 +166,7 @@ func (s *ShortURL) JSONShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	request, err := jsonDecoder.RequestJSONToStruct(r.Body)
+	request, err := jsondecoder.RequestJSONToStruct(r.Body)
 	if err != nil {
 		http.Error(w, "Not read body", http.StatusBadRequest)
 		return
@@ -253,7 +253,7 @@ func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requestList, err := jsonDecoder.RequestListJSONToStruct(r.Body)
+	requestList, err := jsondecoder.RequestListJSONToStruct(r.Body)
 	if err != nil {
 		http.Error(w, "Not read body", http.StatusBadRequest)
 		return
@@ -413,7 +413,7 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		requestList, err := jsonDecoder.RequestListURLDelete(r.Body)
+		requestList, err := jsondecoder.RequestListURLDelete(r.Body)
 		if err != nil {
 			http.Error(w, "Not read body", http.StatusBadRequest)
 			return

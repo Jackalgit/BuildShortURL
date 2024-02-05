@@ -1,4 +1,4 @@
-package jsonDecoder
+package jsondecoder
 
 import (
 	"bytes"

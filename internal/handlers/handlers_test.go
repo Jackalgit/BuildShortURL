@@ -120,7 +120,7 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 			err = result.Body.Close()
 			require.NoError(t, err)
 
-			originalURL, _, _ := s.Storage.GetURL(ctx, userID, string(bodyResult))
+			originalURL, _ := s.Storage.GetURL(ctx, userID, string(bodyResult))
 			assert.Equal(t, tc.Body, string(originalURL))
 
 		})
@@ -194,7 +194,7 @@ func TestShortURL_JSONShortURL(t *testing.T) {
 				json.Unmarshal(resp.Body(), &respons)
 
 				fmt.Println(respons.Result)
-				originalURL, _, _ := s.Storage.GetURL(ctx, userID, respons.Result)
+				originalURL, _ := s.Storage.GetURL(ctx, userID, respons.Result)
 
 				assert.Equal(t, tc.expectedBody, string(originalURL))
 			}
