@@ -53,9 +53,9 @@ func (d DictURL) GetURL(ctx context.Context, userID uuid.UUID, shortURLKey strin
 		return nil, models.NewStatusURL(false, false)
 	}
 
-	origin := userDictURL[shortURLKey]
+	origin, foundShortURLKey := userDictURL[shortURLKey]
 
-	return origin, models.NewStatusURL(true, false)
+	return origin, models.NewStatusURL(foundShortURLKey, false)
 
 }
 

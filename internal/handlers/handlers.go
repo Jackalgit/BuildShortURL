@@ -133,6 +133,7 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "originalURL delete", http.StatusGone)
 		return
 	}
+	fmt.Println(status.Found)
 	if !status.Found {
 		http.Error(w, "originalURL not found", http.StatusNotFound)
 		return
