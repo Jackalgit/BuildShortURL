@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	"github.com/Jackalgit/BuildShortURL/internal/jobertask"
@@ -41,7 +42,8 @@ func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cookie, err := r.Cookie("token")
-	if err == http.ErrNoCookie {
+
+	if errors.Is(err, http.ErrNoCookie) {
 		log.Println("[MakeShortURL] No Cookie:", err)
 	}
 	cookieStr := cookie.Value
@@ -91,7 +93,8 @@ func (s *ShortURL) GetURL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cookie, err := r.Cookie("token")
-	if err == http.ErrNoCookie {
+
+	if errors.Is(err, http.ErrNoCookie) {
 		log.Println("[GetURL] No Cookie:", err)
 	}
 	cookieStr := cookie.Value
@@ -140,7 +143,8 @@ func (s *ShortURL) JSONShortURL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cookie, err := r.Cookie("token")
-	if err == http.ErrNoCookie {
+
+	if errors.Is(err, http.ErrNoCookie) {
 		log.Println("[JSONShortURL] No Cookie:", err)
 	}
 	cookieStr := cookie.Value
@@ -211,8 +215,8 @@ func (s *ShortURL) PingDB(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
-	//ctx, cancel := context.WithTimeout(s.Ctx, 1*time.Second)
 	defer cancel()
+
 	if err := db.PingContext(ctx); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -224,7 +228,8 @@ func (s *ShortURL) PingDB(w http.ResponseWriter, r *http.Request) {
 func (s *ShortURL) Batch(w http.ResponseWriter, r *http.Request) {
 
 	cookie, err := r.Cookie("token")
-	if err == http.ErrNoCookie {
+
+	if errors.Is(err, http.ErrNoCookie) {
 		log.Println("[Batch] No Cookie:", err)
 	}
 	cookieStr := cookie.Value
@@ -291,7 +296,7 @@ func (s *ShortURL) TokenMiddleware(next http.Handler) http.Handler {
 		// добываем токен из запроса
 		cookie, err := r.Cookie("token")
 		// если токена нет, то генерируем его и возвращаем клиенту
-		if err == http.ErrNoCookie {
+		if errors.Is(err, http.ErrNoCookie) {
 			s.SetCookie(w, r)
 			next.ServeHTTP(w, r)
 			return
@@ -339,7 +344,8 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 
 		cookie, err := r.Cookie("token")
-		if err == http.ErrNoCookie {
+
+		if errors.Is(err, http.ErrNoCookie) {
 			log.Println("[UserDictURL] No Cookie:", err)
 		}
 		cookieStr := cookie.Value
@@ -347,6 +353,7 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println("[UserDictURL] Token is not valid", err)
 		}
+
 		if userID.String() == "" {
 			http.Error(w, "No User ID in token", http.StatusUnauthorized)
 			return
@@ -374,7 +381,8 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodDelete {
 
 		cookie, err := r.Cookie("token")
-		if err == http.ErrNoCookie {
+
+		if errors.Is(err, http.ErrNoCookie) {
 			log.Println("[UserDictURL] No Cookie:", err)
 		}
 		cookieStr := cookie.Value
