@@ -6,6 +6,7 @@ import (
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
 	"github.com/Jackalgit/BuildShortURL/internal/initialization"
 	"github.com/Jackalgit/BuildShortURL/internal/logger"
+	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/Jackalgit/BuildShortURL/internal/zip"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
@@ -50,7 +51,8 @@ func runServer() error {
 
 	logger.Log.Info("Running server", zap.String("address", config.Config.ServerPort))
 
-	storage := initialization.InitStorage()
+	storage := initialization.InitStorage(models.InputChUserURL)
+	defer close(models.InputChUserURL)
 
 	router := mux.NewRouter()
 

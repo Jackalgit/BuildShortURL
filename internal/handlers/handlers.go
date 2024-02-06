@@ -422,6 +422,7 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 		}
 
 		jobID := uuid.New()
+		fmt.Println(requestList)
 
 		job := jobertask.NewJober(jobID, userID, requestList).DeleteURL(s.InputChUserURL)
 		jobertask.JobDict[jobID] = job

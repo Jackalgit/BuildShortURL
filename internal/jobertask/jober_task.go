@@ -6,11 +6,12 @@ import (
 	"github.com/google/uuid"
 	"log"
 	"sync"
+	"time"
 )
 
 const (
-	numWorkers       = 3
-	numBatchDataBase = 20
+	numWorkers       = 1
+	numBatchDataBase = 1
 )
 
 var JobDict = make(map[uuid.UUID]*Job)
@@ -82,6 +83,28 @@ func Worker(wg *sync.WaitGroup, doneCh chan struct{}, inputChUserURL chan models
 
 	go func() {
 		defer wg.Done()
+		for {
+			start := time.Now()
+			select {
+			case <-doneCh:
+				return
+			default:
+				if len(deleteList) > 0 && time.Since(start) > 2*time.Second {
+					err := database.DeleteURLUser(deleteList)
+					if err != nil {
+						log.Println("[DeleteURLUser]", err)
+						return
+					}
+					deleteList = nil
+				}
+			}
+		}
+	}()
+
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
 
 		for data := range inputChUserURL {
 
@@ -89,17 +112,20 @@ func Worker(wg *sync.WaitGroup, doneCh chan struct{}, inputChUserURL chan models
 			case <-doneCh:
 				return
 			default:
+				start := time.Now()
 				deleteList = append(deleteList, data)
-				if len(deleteList) == numBatchDataBase {
+
+				if len(deleteList) == numBatchDataBase || time.Since(start) > 2*time.Second {
 					err := database.DeleteURLUser(deleteList)
 					if err != nil {
 						log.Println("[DeleteURLUser]", err)
 						return
 					}
+					deleteList = nil
 				}
 			}
 		}
-		// дописываем остатки которые не вошли в numBatchDataBase
+		// дописываем остатки которые не вошли в numBatchDataBase, при закрытии канала inputChUserURL
 		err := database.DeleteURLUser(deleteList)
 		if err != nil {
 			log.Println("[DeleteURLUser]", err)

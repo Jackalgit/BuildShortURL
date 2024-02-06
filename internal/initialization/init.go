@@ -9,13 +9,13 @@ import (
 	"github.com/Jackalgit/BuildShortURL/internal/userid"
 )
 
-func InitStorage() *handlers.ShortURL {
+func InitStorage(inputChUserURL chan models.UserDeleteURL) *handlers.ShortURL {
 
 	if config.Config.DatabaseDSN != "" {
 		return &handlers.ShortURL{
 			Storage:         database.NewDataBase(),
 			DictUserIDToken: userid.NewDictUserIDToken(),
-			InputChUserURL:  models.InputChUserURL,
+			InputChUserURL:  inputChUserURL,
 		}
 	}
 
