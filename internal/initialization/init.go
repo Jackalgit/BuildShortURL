@@ -5,7 +5,7 @@ import (
 	"github.com/Jackalgit/BuildShortURL/internal/database"
 	dicturl "github.com/Jackalgit/BuildShortURL/internal/dictURL"
 	"github.com/Jackalgit/BuildShortURL/internal/handlers"
-	"github.com/Jackalgit/BuildShortURL/internal/jobertask"
+	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/Jackalgit/BuildShortURL/internal/userid"
 )
 
@@ -15,7 +15,7 @@ func InitStorage() *handlers.ShortURL {
 		return &handlers.ShortURL{
 			Storage:         database.NewDataBase(),
 			DictUserIDToken: userid.NewDictUserIDToken(),
-			InputChUserURL:  jobertask.InputChUserURL,
+			InputChUserURL:  models.InputChUserURL,
 		}
 	}
 

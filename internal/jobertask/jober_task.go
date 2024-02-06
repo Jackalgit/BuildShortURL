@@ -2,6 +2,7 @@ package jobertask
 
 import (
 	"github.com/Jackalgit/BuildShortURL/internal/database"
+	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/google/uuid"
 	"log"
 	"sync"
@@ -28,14 +29,7 @@ func NewJober(jobID uuid.UUID, userID uuid.UUID, taskList []string) *Job {
 	}
 }
 
-type UserDeleteURL struct {
-	UserID   uuid.UUID
-	ShortURL string
-}
-
-var InputChUserURL = make(chan UserDeleteURL)
-
-func (j *Job) DeleteURL(inputChUserURL chan UserDeleteURL) *Job {
+func (j *Job) DeleteURL(inputChUserURL chan models.UserDeleteURL) *Job {
 
 	// запускаем принятую работу в отдельной горутине для возвращения в хендлер и и отдачи ответа клиенту
 	go func() {
@@ -57,7 +51,7 @@ func (j *Job) DeleteURL(inputChUserURL chan UserDeleteURL) *Job {
 
 }
 
-func Generator(doneCh chan struct{}, inputChUserURL chan UserDeleteURL, userID uuid.UUID, input []string) chan UserDeleteURL {
+func Generator(doneCh chan struct{}, inputChUserURL chan models.UserDeleteURL, userID uuid.UUID, input []string) chan models.UserDeleteURL {
 
 	go func() {
 
@@ -66,23 +60,23 @@ func Generator(doneCh chan struct{}, inputChUserURL chan UserDeleteURL, userID u
 			case <-doneCh:
 				return
 			default:
-				inputChUserURL <- UserDeleteURL{UserID: userID, ShortURL: data}
+				inputChUserURL <- models.UserDeleteURL{UserID: userID, ShortURL: data}
 			}
 		}
 	}()
 	return inputChUserURL
 }
 
-func fanOut(wg *sync.WaitGroup, doneCh chan struct{}, inputChUserURL chan UserDeleteURL) {
+func fanOut(wg *sync.WaitGroup, doneCh chan struct{}, inputChUserURL chan models.UserDeleteURL) {
 
 	for i := 0; i < numWorkers; i++ {
 		Worker(wg, doneCh, inputChUserURL)
 	}
 }
 
-func Worker(wg *sync.WaitGroup, doneCh chan struct{}, inputChUserURL chan UserDeleteURL) {
+func Worker(wg *sync.WaitGroup, doneCh chan struct{}, inputChUserURL chan models.UserDeleteURL) {
 
-	var deleteList []UserDeleteURL
+	var deleteList []models.UserDeleteURL
 
 	wg.Add(1)
 

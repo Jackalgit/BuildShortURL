@@ -33,7 +33,7 @@ type Repository interface {
 type ShortURL struct {
 	Storage         Repository
 	DictUserIDToken userid.DictUserIDToken
-	InputChUserURL  chan jobertask.UserDeleteURL
+	InputChUserURL  chan models.UserDeleteURL
 }
 
 func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {

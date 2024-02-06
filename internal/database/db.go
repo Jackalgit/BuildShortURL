@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
-	"github.com/Jackalgit/BuildShortURL/internal/jobertask"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
@@ -226,7 +225,7 @@ func (d DataBase) UserURLList(ctx context.Context, userID uuid.UUID) ([]models.R
 
 }
 
-func DeleteURLUser(deleteList []jobertask.UserDeleteURL) error {
+func DeleteURLUser(deleteList []models.UserDeleteURL) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
