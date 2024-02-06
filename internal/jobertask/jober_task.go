@@ -79,17 +79,19 @@ func Worker(wg *sync.WaitGroup, doneCh chan struct{}, inputChUserURL chan models
 
 	var deleteList []models.UserDeleteURL
 
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
 	wg.Add(1)
 
 	go func() {
 		defer wg.Done()
 		for {
-			start := time.Now()
 			select {
 			case <-doneCh:
 				return
-			default:
-				if len(deleteList) > 0 && time.Since(start) > 3*time.Second {
+			case <-ticker.C:
+				if len(deleteList) > 0 {
 					err := database.DeleteURLUser(deleteList)
 					if err != nil {
 						log.Println("[DeleteURLUser]", err)
@@ -112,10 +114,9 @@ func Worker(wg *sync.WaitGroup, doneCh chan struct{}, inputChUserURL chan models
 			case <-doneCh:
 				return
 			default:
-				start := time.Now()
 				deleteList = append(deleteList, data)
 
-				if len(deleteList) == numBatchDataBase || time.Since(start) > 2*time.Second {
+				if len(deleteList) == numBatchDataBase {
 					err := database.DeleteURLUser(deleteList)
 					if err != nil {
 						log.Println("[DeleteURLUser]", err)
