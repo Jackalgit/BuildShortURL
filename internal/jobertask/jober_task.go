@@ -12,6 +12,7 @@ import (
 const (
 	numWorkers       = 3
 	numBatchDataBase = 20
+	timeDelete       = 3
 )
 
 var JobDict = make(map[uuid.UUID]*Job)
@@ -29,6 +30,14 @@ func NewJober(jobID uuid.UUID, userID uuid.UUID, taskList []string) *Job {
 		TaskList: taskList,
 	}
 }
+
+// При старте сервиса создается общий канал inputChUserURL для записи пары УРЛ и Юзер отправленные пользователями
+// на удаление.
+// Можно настроить число numWorkers и numBatchDataBase для оптимизации скорости удаления.
+// Воркер отправляет на удаление когда соберет numBatchDataBase если numBatchDataBase не удается собрать за
+// время timeDelete, то запрос будет отправлен по прошествии этого времени.
+// Так канал inputChUserURL открывается при запуске сервиса, то он по сути всегда открыт и время timeDelete
+// позволяет избежать ситуации когда в ожидании numBatchDataBase зависнут "хвосты" на удаление.
 
 func (j *Job) DeleteURL(inputChUserURL chan models.UserDeleteURL) *Job {
 
@@ -79,7 +88,7 @@ func Worker(wg *sync.WaitGroup, doneCh chan struct{}, inputChUserURL chan models
 
 	var deleteList []models.UserDeleteURL
 
-	ticker := time.NewTicker(3 * time.Second)
+	ticker := time.NewTicker(timeDelete * time.Second)
 
 	wg.Add(1)
 
@@ -132,83 +141,3 @@ func Worker(wg *sync.WaitGroup, doneCh chan struct{}, inputChUserURL chan models
 		}
 	}()
 }
-
-//func (j *Job) DeleteURL() *Job {
-//
-//	// запускаем принятую работу в отдельной горутине для возвращения в хендлер и и отдачи ответа клиенту
-//	go func() {
-//		var wg sync.WaitGroup
-//		// сигнальный канал для завершения горутин
-//		doneCh := make(chan struct{})
-//		// закрываем его при завершении программы
-//		defer close(doneCh)
-//		// пишем входные данные в канал
-//		inputCh := Generator(doneCh, j.TaskList)
-//		// запускаем толпу рабочих дербанить канал
-//		fanOut(&wg, doneCh, j.UserID, inputCh)
-//
-//		wg.Wait()
-//
-//	}()
-//
-//	return &Job{}
-//
-//}
-//
-//func Generator(doneCh chan struct{}, input []string) chan string {
-//	inputCh := make(chan string)
-//
-//	go func() {
-//		defer close(inputCh)
-//
-//		for _, data := range input {
-//			select {
-//			case <-doneCh:
-//				return
-//			case inputCh <- data:
-//			}
-//		}
-//	}()
-//	return inputCh
-//}
-//
-//func fanOut(wg *sync.WaitGroup, doneCh chan struct{}, userID uuid.UUID, inputCh chan string) {
-//
-//	for i := 0; i < numWorkers; i++ {
-//		Worker(wg, doneCh, userID, inputCh)
-//	}
-//}
-//
-//func Worker(wg *sync.WaitGroup, doneCh chan struct{}, userID uuid.UUID, inputCh chan string) {
-//
-//	var deleteList []string
-//
-//	wg.Add(1)
-//
-//	go func() {
-//		defer wg.Done()
-//
-//		for data := range inputCh {
-//
-//			select {
-//			case <-doneCh:
-//				return
-//			default:
-//				deleteList = append(deleteList, data)
-//				if len(deleteList) == numBatchDataBase {
-//					err := database.DeleteURLUser(userID, deleteList)
-//					if err != nil {
-//						log.Println("[DeleteURLUser]", err)
-//						return
-//					}
-//				}
-//			}
-//		}
-//		// дописываем остатки которые не вошли в numBatchDataBase
-//		err := database.DeleteURLUser(userID, deleteList)
-//		if err != nil {
-//			log.Println("[DeleteURLUser]", err)
-//			return
-//		}
-//	}()
-//}
