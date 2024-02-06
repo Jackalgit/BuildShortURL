@@ -79,8 +79,7 @@ func Worker(wg *sync.WaitGroup, doneCh chan struct{}, inputChUserURL chan models
 
 	var deleteList []models.UserDeleteURL
 
-	ticker := time.NewTicker(100 * time.Millisecond)
-	defer ticker.Stop()
+	ticker := time.NewTicker(3 * time.Second)
 
 	wg.Add(1)
 
@@ -115,7 +114,6 @@ func Worker(wg *sync.WaitGroup, doneCh chan struct{}, inputChUserURL chan models
 				return
 			default:
 				deleteList = append(deleteList, data)
-
 				if len(deleteList) == numBatchDataBase {
 					err := database.DeleteURLUser(deleteList)
 					if err != nil {
