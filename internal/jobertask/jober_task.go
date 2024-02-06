@@ -79,7 +79,7 @@ func Worker(wg *sync.WaitGroup, doneCh chan struct{}, inputChUserURL chan models
 
 	var deleteList []models.UserDeleteURL
 
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
 	wg.Add(1)
