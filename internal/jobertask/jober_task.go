@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	numWorkers       = 1
-	numBatchDataBase = 1
+	numWorkers       = 3
+	numBatchDataBase = 20
 )
 
 var JobDict = make(map[uuid.UUID]*Job)
@@ -89,7 +89,7 @@ func Worker(wg *sync.WaitGroup, doneCh chan struct{}, inputChUserURL chan models
 			case <-doneCh:
 				return
 			default:
-				if len(deleteList) > 0 && time.Since(start) > 2*time.Second {
+				if len(deleteList) > 0 && time.Since(start) > 3*time.Second {
 					err := database.DeleteURLUser(deleteList)
 					if err != nil {
 						log.Println("[DeleteURLUser]", err)
