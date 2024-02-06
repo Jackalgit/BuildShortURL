@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
+	"github.com/Jackalgit/BuildShortURL/internal/jobertask"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/google/uuid"
 	"github.com/jackc/pgerrcode"
@@ -28,6 +29,8 @@ func NewDataBase() DataBase {
 	if err != nil {
 		log.Printf("[Open DB] Не удалось установить соединение с базой данных: %q", err)
 	}
+
+	//db.SetMaxOpenConns(30)
 
 	query := `CREATE TABLE IF NOT EXISTS storage (correlationId VARCHAR (255), userID VARCHAR (255), shortURLKey VARCHAR (255), originalURL VARCHAR (255), deletedFlag BOOLEAN DEFAULT false)`
 
@@ -223,7 +226,7 @@ func (d DataBase) UserURLList(ctx context.Context, userID uuid.UUID) ([]models.R
 
 }
 
-func DeleteURLUser(userID uuid.UUID, deleteList []string) error {
+func DeleteURLUser(deleteList []jobertask.UserDeleteURL) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -240,9 +243,9 @@ func DeleteURLUser(userID uuid.UUID, deleteList []string) error {
 		log.Printf("[PrepareContext] %s", err)
 	}
 	defer stmt.Close()
-	for _, shortURL := range deleteList {
-		shortURLKeyFull := fmt.Sprint(config.Config.BaseAddress, "/", shortURL)
-		_, err = stmt.ExecContext(ctx, shortURLKeyFull, userID)
+	for _, value := range deleteList {
+		shortURLKeyFull := fmt.Sprint(config.Config.BaseAddress, "/", value.ShortURL)
+		_, err = stmt.ExecContext(ctx, shortURLKeyFull, value.UserID)
 		if err != nil {
 			log.Printf("[ExecContext] %q", err)
 		}

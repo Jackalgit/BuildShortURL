@@ -28,7 +28,14 @@ func NewJober(jobID uuid.UUID, userID uuid.UUID, taskList []string) *Job {
 	}
 }
 
-func (j *Job) DeleteURL() *Job {
+type UserDeleteURL struct {
+	UserID   uuid.UUID
+	ShortURL string
+}
+
+var InputChUserURL = make(chan UserDeleteURL)
+
+func (j *Job) DeleteURL(inputChUserURL chan UserDeleteURL) *Job {
 
 	// запускаем принятую работу в отдельной горутине для возвращения в хендлер и и отдачи ответа клиенту
 	go func() {
@@ -38,9 +45,9 @@ func (j *Job) DeleteURL() *Job {
 		// закрываем его при завершении программы
 		defer close(doneCh)
 		// пишем входные данные в канал
-		inputCh := Generator(doneCh, j.TaskList)
+		inputCh := Generator(doneCh, inputChUserURL, j.UserID, j.TaskList)
 		// запускаем толпу рабочих дербанить канал
-		fanOut(&wg, doneCh, j.UserID, inputCh)
+		fanOut(&wg, doneCh, inputCh)
 
 		wg.Wait()
 
@@ -50,40 +57,39 @@ func (j *Job) DeleteURL() *Job {
 
 }
 
-func Generator(doneCh chan struct{}, input []string) chan string {
-	inputCh := make(chan string)
+func Generator(doneCh chan struct{}, inputChUserURL chan UserDeleteURL, userID uuid.UUID, input []string) chan UserDeleteURL {
 
 	go func() {
-		defer close(inputCh)
 
 		for _, data := range input {
 			select {
 			case <-doneCh:
 				return
-			case inputCh <- data:
+			default:
+				inputChUserURL <- UserDeleteURL{UserID: userID, ShortURL: data}
 			}
 		}
 	}()
-	return inputCh
+	return inputChUserURL
 }
 
-func fanOut(wg *sync.WaitGroup, doneCh chan struct{}, userID uuid.UUID, inputCh chan string) {
+func fanOut(wg *sync.WaitGroup, doneCh chan struct{}, inputChUserURL chan UserDeleteURL) {
 
 	for i := 0; i < numWorkers; i++ {
-		Worker(wg, doneCh, userID, inputCh)
+		Worker(wg, doneCh, inputChUserURL)
 	}
 }
 
-func Worker(wg *sync.WaitGroup, doneCh chan struct{}, userID uuid.UUID, inputCh chan string) {
+func Worker(wg *sync.WaitGroup, doneCh chan struct{}, inputChUserURL chan UserDeleteURL) {
 
-	var deleteList []string
+	var deleteList []UserDeleteURL
 
 	wg.Add(1)
 
 	go func() {
 		defer wg.Done()
 
-		for data := range inputCh {
+		for data := range inputChUserURL {
 
 			select {
 			case <-doneCh:
@@ -91,7 +97,7 @@ func Worker(wg *sync.WaitGroup, doneCh chan struct{}, userID uuid.UUID, inputCh 
 			default:
 				deleteList = append(deleteList, data)
 				if len(deleteList) == numBatchDataBase {
-					err := database.DeleteURLUser(userID, deleteList)
+					err := database.DeleteURLUser(deleteList)
 					if err != nil {
 						log.Println("[DeleteURLUser]", err)
 						return
@@ -100,10 +106,90 @@ func Worker(wg *sync.WaitGroup, doneCh chan struct{}, userID uuid.UUID, inputCh 
 			}
 		}
 		// дописываем остатки которые не вошли в numBatchDataBase
-		err := database.DeleteURLUser(userID, deleteList)
+		err := database.DeleteURLUser(deleteList)
 		if err != nil {
 			log.Println("[DeleteURLUser]", err)
 			return
 		}
 	}()
 }
+
+//func (j *Job) DeleteURL() *Job {
+//
+//	// запускаем принятую работу в отдельной горутине для возвращения в хендлер и и отдачи ответа клиенту
+//	go func() {
+//		var wg sync.WaitGroup
+//		// сигнальный канал для завершения горутин
+//		doneCh := make(chan struct{})
+//		// закрываем его при завершении программы
+//		defer close(doneCh)
+//		// пишем входные данные в канал
+//		inputCh := Generator(doneCh, j.TaskList)
+//		// запускаем толпу рабочих дербанить канал
+//		fanOut(&wg, doneCh, j.UserID, inputCh)
+//
+//		wg.Wait()
+//
+//	}()
+//
+//	return &Job{}
+//
+//}
+//
+//func Generator(doneCh chan struct{}, input []string) chan string {
+//	inputCh := make(chan string)
+//
+//	go func() {
+//		defer close(inputCh)
+//
+//		for _, data := range input {
+//			select {
+//			case <-doneCh:
+//				return
+//			case inputCh <- data:
+//			}
+//		}
+//	}()
+//	return inputCh
+//}
+//
+//func fanOut(wg *sync.WaitGroup, doneCh chan struct{}, userID uuid.UUID, inputCh chan string) {
+//
+//	for i := 0; i < numWorkers; i++ {
+//		Worker(wg, doneCh, userID, inputCh)
+//	}
+//}
+//
+//func Worker(wg *sync.WaitGroup, doneCh chan struct{}, userID uuid.UUID, inputCh chan string) {
+//
+//	var deleteList []string
+//
+//	wg.Add(1)
+//
+//	go func() {
+//		defer wg.Done()
+//
+//		for data := range inputCh {
+//
+//			select {
+//			case <-doneCh:
+//				return
+//			default:
+//				deleteList = append(deleteList, data)
+//				if len(deleteList) == numBatchDataBase {
+//					err := database.DeleteURLUser(userID, deleteList)
+//					if err != nil {
+//						log.Println("[DeleteURLUser]", err)
+//						return
+//					}
+//				}
+//			}
+//		}
+//		// дописываем остатки которые не вошли в numBatchDataBase
+//		err := database.DeleteURLUser(userID, deleteList)
+//		if err != nil {
+//			log.Println("[DeleteURLUser]", err)
+//			return
+//		}
+//	}()
+//}

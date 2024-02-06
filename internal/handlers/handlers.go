@@ -33,6 +33,7 @@ type Repository interface {
 type ShortURL struct {
 	Storage         Repository
 	DictUserIDToken userid.DictUserIDToken
+	InputChUserURL  chan jobertask.UserDeleteURL
 }
 
 func (s *ShortURL) MakeShortURL(w http.ResponseWriter, r *http.Request) {
@@ -422,7 +423,7 @@ func (s *ShortURL) UserDictURL(w http.ResponseWriter, r *http.Request) {
 
 		jobID := uuid.New()
 
-		job := jobertask.NewJober(jobID, userID, requestList).DeleteURL()
+		job := jobertask.NewJober(jobID, userID, requestList).DeleteURL(s.InputChUserURL)
 		jobertask.JobDict[jobID] = job
 
 		w.WriteHeader(http.StatusAccepted)
