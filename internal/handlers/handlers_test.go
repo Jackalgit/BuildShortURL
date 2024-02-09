@@ -1,10 +1,14 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	dicturl "github.com/Jackalgit/BuildShortURL/internal/dictURL"
+	"github.com/Jackalgit/BuildShortURL/internal/jwt"
 	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/go-resty/resty/v2"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -15,7 +19,16 @@ import (
 )
 
 func TestShortURL_GetURL(t *testing.T) {
-	s := ShortURL{url: map[string][]byte{"qweQWErtyQ": []byte("long long long url")}}
+	ctx := context.Background()
+	dictURL := dicturl.NewDictURL()
+	userID := uuid.New()
+
+	dictURL.AddURL(ctx, userID, "/qweQWErtyQ", []byte("long long long url"))
+
+	s := ShortURL{Storage: dictURL}
+
+	tokenString := jwt.BuildJWTString(userID)
+	cookie := http.Cookie{Name: "token", Value: tokenString}
 
 	tests := []struct {
 		name       string
@@ -35,14 +48,13 @@ func TestShortURL_GetURL(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 
 			r := httptest.NewRequest(tc.method, tc.request, nil)
+			r.AddCookie(&cookie)
 			w := httptest.NewRecorder()
 
 			s.GetURL(w, r)
 
 			result := w.Result()
-			fmt.Println(tc.statusCode)
-			fmt.Println(w.Code)
-			fmt.Println(result)
+
 			require.Equal(t, tc.statusCode, w.Code, "The response code does not match what is expected")
 			assert.Equal(t, tc.Location, result.Header.Get("Location"))
 			err := result.Body.Close()
@@ -53,6 +65,13 @@ func TestShortURL_GetURL(t *testing.T) {
 }
 
 func TestShortURL_MakeShortURL(t *testing.T) {
+	ctx := context.Background()
+	dictURL := dicturl.NewDictURL()
+	s := ShortURL{Storage: dictURL}
+
+	userID := uuid.New()
+	tokenString := jwt.BuildJWTString(userID)
+	cookie := http.Cookie{Name: "token", Value: tokenString}
 
 	tests := []struct {
 		name        string
@@ -72,7 +91,6 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 			Body:        "long long long url",
 			statusCode:  http.StatusCreated,
 			contentType: "text/plain",
-			shortURL:    "http://localhost",
 		},
 	}
 
@@ -82,9 +100,9 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 			bodyReader := strings.NewReader(tc.Body)
 
 			r := httptest.NewRequest(tc.method, "/", bodyReader)
+			r.AddCookie(&cookie)
 			w := httptest.NewRecorder()
 
-			s := NewShortURL()
 			s.MakeShortURL(w, r)
 
 			require.Equal(t, tc.statusCode, w.Code, "The response code does not match what is expected")
@@ -102,16 +120,24 @@ func TestShortURL_MakeShortURL(t *testing.T) {
 			err = result.Body.Close()
 			require.NoError(t, err)
 
-			assert.Equal(t, tc.Body, string(s.url[string(bodyResult)[1:]]))
+			originalURL, _ := s.Storage.GetURL(ctx, userID, string(bodyResult))
+			assert.Equal(t, tc.Body, string(originalURL))
 
 		})
 	}
 
 }
 
-func TestShortURL_APIShortURL(t *testing.T) {
-	dictURL := NewShortURL()
-	handler := http.HandlerFunc(dictURL.APIShortURL)
+func TestShortURL_JSONShortURL(t *testing.T) {
+	ctx := context.Background()
+	dictURL := dicturl.NewDictURL()
+	s := ShortURL{Storage: dictURL}
+
+	userID := uuid.New()
+	tokenString := jwt.BuildJWTString(userID)
+	cookie := http.Cookie{Name: "token", Value: tokenString}
+
+	handler := http.HandlerFunc(s.JSONShortURL)
 	srv := httptest.NewServer(handler)
 	defer srv.Close()
 
@@ -149,6 +175,7 @@ func TestShortURL_APIShortURL(t *testing.T) {
 			req := resty.New().R()
 			req.Method = tc.method
 			req.URL = srv.URL
+			req.SetCookie(&cookie)
 
 			if len(tc.body) > 0 {
 				req.SetHeader("Content-Type", "application/json")
@@ -159,14 +186,17 @@ func TestShortURL_APIShortURL(t *testing.T) {
 			assert.NoError(t, err, "error making HTTP request")
 
 			assert.Equal(t, tc.statusCode, resp.StatusCode(), "Response code didn't match expected")
-			fmt.Println(dictURL.url)
-			fmt.Println(string(resp.Body()))
+
 			// проверяем, что сохранилось в dictURL
 			if tc.expectedBody != "" {
 				var respons models.Response
 				// десериализуем resp.Body json в go model Response
 				json.Unmarshal(resp.Body(), &respons)
-				assert.Equal(t, tc.expectedBody, string(dictURL.url[respons.Result[1:]]))
+
+				fmt.Println(respons.Result)
+				originalURL, _ := s.Storage.GetURL(ctx, userID, respons.Result)
+
+				assert.Equal(t, tc.expectedBody, string(originalURL))
 			}
 		})
 	}

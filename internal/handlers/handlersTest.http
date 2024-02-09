@@ -1,12 +1,12 @@
 POST http://localhost:8080/
 Content-Type: text/plain
 
-www.ivan.ru
+www.ivan.run
 
 ###
 
 # @no-redirect
-GET http://localhost:8080/PBznXgmWjv
+GET http://localhost:8080/XXsdywRgme
 Content-Type: text/plain
 
 ###
@@ -17,5 +17,36 @@ Content-Type: application/json
 {
   "url": "https://practicum.yandex.ru"
 }
+
+###
+
+GET http://localhost:8080/ping
+Content-Type: text/plain
+
+###
+
+POST http://localhost:8080/api/shorten/batch
+Content-Type: application/json
+
+[
+    {
+        "correlation_id":"36b7a4d1-ea5c-478d-8110-4dd60015f4b5",
+        "original_url":"http://vvrwtxht.yandex/qo8s9/ky2mn2bud"
+        },
+    {
+        "correlation_id":"9e7e4c8c-d0b8-4cab-a10a-2733c1041b2b",
+        "original_url":"http://mpimx8.net"
+        }
+
+]
+###
+
+# @no-cookie-jar
+DELETE http://localhost:8080/api/user/urls
+Content-Type: application/json
+Cookie: token:
+
+
+["QOXOWjVChw", "dipvmSLFYS", "ZHMPFRMiOv", "iEogtwLmnp", "g", "j", "XXsdywRgme", "k", "jk"]
 
 ###

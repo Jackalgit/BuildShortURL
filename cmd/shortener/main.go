@@ -2,9 +2,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/Jackalgit/BuildShortURL/cmd/config"
-	"github.com/Jackalgit/BuildShortURL/internal/handlers"
+	"github.com/Jackalgit/BuildShortURL/internal/initialization"
 	"github.com/Jackalgit/BuildShortURL/internal/logger"
+	"github.com/Jackalgit/BuildShortURL/internal/models"
 	"github.com/Jackalgit/BuildShortURL/internal/zip"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
@@ -17,10 +19,21 @@ func init() {
 	config.ConfigBaseAddress()
 	config.ConfigLogger()
 	config.ConfigFileStorage()
-
+	config.ConfigDatabaseDSN()
+	config.ConfigSecretKey()
 }
 
 func main() {
+	//зависают тесты на первом инкременте
+	//stop := make(chan os.Signal, 1)
+	//signal.Notify(stop, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+	//ctx := context.Background()
+	//ctx, _ := signal.NotifyContext(
+	//	context.Background(),
+	//	syscall.SIGINT,
+	//	syscall.SIGTERM,
+	//	syscall.SIGQUIT,
+	//)
 
 	flag.Parse()
 
@@ -38,14 +51,24 @@ func runServer() error {
 
 	logger.Log.Info("Running server", zap.String("address", config.Config.ServerPort))
 
-	dictURL := handlers.NewShortURL()
+	storage := initialization.InitStorage(models.InputChUserURL)
+	defer close(models.InputChUserURL)
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/", dictURL.MakeShortURL).Methods("POST")
-	router.HandleFunc("/{id}", dictURL.GetURL).Methods("GET")
-	router.HandleFunc("/api/shorten", dictURL.APIShortURL).Methods("POST")
-	router.Use(logger.LoggingMiddleware, zip.GzipMiddleware)
+	router.HandleFunc("/ping", storage.PingDB).Methods("GET")
+	router.HandleFunc("/", storage.MakeShortURL).Methods("POST")
+	router.HandleFunc("/{id}", storage.GetURL).Methods("GET")
+	router.HandleFunc("/api/shorten", storage.JSONShortURL).Methods("POST")
+	router.HandleFunc("/api/shorten/batch", storage.Batch).Methods("POST")
+	router.HandleFunc("/api/user/urls", storage.UserDictURL).Methods("GET", "DELETE")
+
+	router.Use(storage.TokenMiddleware, logger.LoggingMiddleware, zip.GzipMiddleware)
+
+	if err := http.ListenAndServe(config.Config.ServerPort, router); err != nil {
+		return fmt.Errorf("[ListenAndServe] запустить сервер: %q", err)
+
+	}
 
 	return http.ListenAndServe(config.Config.ServerPort, router)
 
